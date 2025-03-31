@@ -12,16 +12,16 @@ An automated blog post generation system that creates content for Framer website
 - Automatic retry for failed generations
 - CORS support for frontend integration
 - SQLite database for simple setup
-- Comprehensive test suite
+- Docker support for easy deployment
 
-## Setup
+## Local Development Setup
 
 1. Install dependencies:
 ```bash
 pipenv install
 ```
 
-2. Create and configure your .env file:
+2. Create and configure your .env file:v
 ```bash
 cp .env.example .env
 # Edit .env with your OpenAI API key
@@ -34,46 +34,47 @@ python manage.py migrate
 python manage.py createsuperuser
 ```
 
-4. Run the test suite to verify everything is working:
+4. Run the test suite:
 ```bash
 python manage.py test blogs
 ```
 
-5. Start the development server:
+## Docker Setup
+
+1. Build and start all services:
 ```bash
-# Terminal 1: Django server
-python manage.py runserver
-
-# Terminal 2: Celery worker
-celery -A api worker --loglevel=info
-
-# Terminal 3: Celery beat (scheduler)
-celery -A api beat --loglevel=info
+docker-compose up --build
 ```
 
-## Tests
-
-The project includes a comprehensive test suite that covers:
-
-- Model functionality
-  - Client creation and post scheduling
-  - Blog post creation and status management
-- API endpoints
-  - Authentication
-  - Client management
-  - Blog post generation
-- Background tasks
-  - Automated post generation
-  - Error handling and retries
-
-Run the tests with:
+2. Run migrations:
 ```bash
-python manage.py test blogs
+docker-compose exec web python manage.py migrate
 ```
 
-For verbose output:
+3. Create a superuser:
 ```bash
-python manage.py test blogs -v 2
+docker-compose exec web python manage.py createsuperuser
+```
+
+### Updating Dependencies
+
+If you need to update dependencies:
+
+1. Update the Pipfile:
+```bash
+# Add or modify dependencies in Pipfile
+pipenv install <new-package>
+```
+
+2. Lock the dependencies:
+```bash
+pipenv lock
+```
+
+3. Rebuild the Docker containers:
+```bash
+docker-compose down
+docker-compose up --build
 ```
 
 ## Usage
@@ -104,6 +105,26 @@ Optional:
 - `DJANGO_ALLOWED_HOSTS` - Allowed hosts (defaults to *)
 - `CORS_ALLOWED_ORIGINS` - Allowed CORS origins
 
+## Docker Services
+
+The application runs with the following services:
+
+- `web`: Django application with Gunicorn
+- `celery_worker`: Processes background tasks
+- `celery_beat`: Schedules periodic tasks
+- `redis`: Message broker for Celery
+
+## Tests
+
+Run the tests with:
+```bash
+# Local development
+python manage.py test blogs
+
+# In Docker
+docker-compose exec web python manage.py test blogs
+```
+
 ## Framer Integration
 
 1. Get an authentication token:
@@ -118,8 +139,6 @@ curl -X POST http://localhost:8000/api-token-auth/ \
 curl http://localhost:8000/api/posts/ \
   -H "Authorization: Token your_token_here"
 ```
-
-3. In your Framer site, fetch and display the posts using the API endpoints
 
 ## License
 

@@ -87,8 +87,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api.wsgi.application'
 
+from .my_secrets import database
+
 DATABASES = {
-    'default': {
+    'default': database or  {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }

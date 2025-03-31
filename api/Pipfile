@@ -6,19 +6,20 @@ name = "pypi"
 [packages]
 django = "*"
 djangorestframework = "*"
-celery = ">=5.3.0" 
+celery = ">=5.3.0"
 openai = "*"
 python-dotenv = "*"
 django-cors-headers = "*"
 redis = "*"
 django-storages = "*"
-boto3 = "*"
+gunicorn = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
+python_version = "3.12"
 
 [pipenv]
 allow_prereleases = true
-pip_version = "<24.1"  # Specify pip version to avoid metadata issues
+pip_version = "<24.1"
