@@ -4,7 +4,8 @@ from django.utils import timezone
 class Client(models.Model):
     name = models.CharField(max_length=200)
     gpt_prompt = models.TextField(help_text="Custom GPT prompt for this client's tone of voice")
-    post_interval_hours = models.IntegerField(default=24, help_text="Hours between each blog post generation")
+    post_interval_days = models.IntegerField(default=1, help_text="Days between each blog post generation")
+    post_time = models.TimeField(default=timezone.datetime.strptime('09:00', '%H:%M').time(), help_text="Time of day to post (24-hour format)")
     last_post_generated = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -17,8 +18,17 @@ class Client(models.Model):
         if not self.last_post_generated:
             return True
         
-        next_post_due = self.last_post_generated + timezone.timedelta(hours=self.post_interval_hours)
-        return timezone.now() >= next_post_due
+        # Get the date of the last post
+        last_post_date = self.last_post_generated.date()
+        
+        # Calculate the next post date
+        next_post_date = last_post_date + timezone.timedelta(days=self.post_interval_days)
+        current_time = timezone.localtime(timezone.now())
+        
+        # Check if we're on or past the next post date and if current time is past post time
+        return (current_time.date() > next_post_date or 
+                (current_time.date() == next_post_date and 
+                 current_time.time() >= self.post_time))
 
 class BlogPost(models.Model):
     STATUS_CHOICES = [

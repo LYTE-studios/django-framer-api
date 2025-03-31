@@ -4,7 +4,7 @@ from .models import Client, BlogPost
 class ClientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
-        fields = ['id', 'name', 'post_interval_hours', 'is_active', 'last_post_generated', 'created_at']
+        fields = ['id', 'name', 'post_interval_days', 'post_time', 'is_active', 'last_post_generated', 'created_at']
         read_only_fields = ['last_post_generated', 'created_at']
 
 class BlogPostSerializer(serializers.ModelSerializer):

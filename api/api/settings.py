@@ -50,7 +50,17 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-# CORS settings
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://framer-api.lytestudios.be',
+]
+
+# If you're using CORS, also add:
+CORS_ALLOWED_ORIGINS = [
+    'https://framer-api.lytestudios.be',
+]
+
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True  # For development only
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 

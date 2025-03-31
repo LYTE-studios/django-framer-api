@@ -4,7 +4,7 @@ from .models import Client, BlogPost
 
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'post_interval_hours', 'last_post_generated', 'is_active', 'created_at')
+    list_display = ('name', 'post_interval_days', 'post_time', 'last_post_generated', 'is_active', 'created_at')
     list_filter = ('is_active',)
     search_fields = ('name',)
     readonly_fields = ('last_post_generated', 'created_at', 'updated_at')
@@ -13,7 +13,7 @@ class ClientAdmin(admin.ModelAdmin):
             'fields': ('name', 'is_active')
         }),
         ('Content Generation Settings', {
-            'fields': ('gpt_prompt', 'post_interval_hours')
+            'fields': ('gpt_prompt', 'post_interval_days', 'post_time')
         }),
         ('Timestamps', {
             'fields': ('last_post_generated', 'created_at', 'updated_at'),
