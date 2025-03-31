@@ -1,0 +1,22 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+celery = ">=5.3.0"
+openai = "*"
+python-dotenv = "*"
+django-cors-headers = "*"  # This is the correct package name
+redis = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+
+[pipenv]
+allow_prereleases = true
+pip_version = "<24.1"

@@ -1,0 +1,24 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"
+djangorestframework = "*"
+celery = ">=5.3.0"  # Using a newer version of Celery to avoid compatibility issues
+openai = "*"
+python-dotenv = "*"
+django-cors-headers = "*"
+redis = "*"
+django-storages = "*"
+boto3 = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
+
+[pipenv]
+allow_prereleases = true
+pip_version = "<24.1"  # Specify pip version to avoid metadata issues

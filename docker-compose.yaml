@@ -1,0 +1,5 @@
+services:
+  api:
+    network_mode: "host"
+    build: api
+    restart: on-failure
