@@ -4,14 +4,20 @@ from django.contrib import messages
 from django.urls import reverse, path
 from django.utils.html import format_html
 from django.http import HttpResponseRedirect
+from django.template.response import TemplateResponse
 from django.core.exceptions import PermissionDenied
-from .models import Client, BlogPost, ToneOfVoice, ToneOfVoiceExample
+from .models import Client, BlogPost, ToneOfVoice, ToneOfVoiceExample, BlogSubject, SpecialEvent
 from .tasks import generate_blog_posts
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ToneOfVoiceExampleInline(admin.TabularInline):
     model = ToneOfVoiceExample
     extra = 1
     fields = ('title', 'content')
+
 
 @admin.register(ToneOfVoice)
 class ToneOfVoiceAdmin(admin.ModelAdmin):
@@ -34,6 +40,7 @@ class ToneOfVoiceAdmin(admin.ModelAdmin):
         return obj.example_posts.count()
     example_count.short_description = "Number of Examples"
 
+
 class BlogPostInline(admin.TabularInline):
     model = BlogPost
     extra = 0
@@ -53,9 +60,11 @@ class BlogPostInline(admin.TabularInline):
     def has_add_permission(self, request, obj=None):
         return False
 
+
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
     list_display = ('name', 'tone_of_voice', 'post_interval_days', 'post_time', 'last_post_generated', 'is_active', 'created_at', 'view_posts')
+    change_list_template = 'admin/blogs/client_changelist.html'
     list_filter = ('is_active', 'tone_of_voice')
     search_fields = ('name', 'tone_of_voice__name')
     readonly_fields = ('last_post_generated', 'created_at', 'updated_at', 'generate_post_button')
@@ -77,12 +86,17 @@ class ClientAdmin(admin.ModelAdmin):
     )
 
     def get_urls(self):
-        urls = super().get_urls()
+        urls = super(ClientAdmin, self).get_urls()
         custom_urls = [
             path(
                 '<int:client_id>/generate/',
                 self.admin_site.admin_view(self.generate_post_view),
                 name='client-generate-post',
+            ),
+            path(
+                'upcoming-posts/',
+                self.admin_site.admin_view(self.upcoming_posts_view),
+                name='upcoming-posts',
             ),
         ]
         return custom_urls + urls
@@ -107,15 +121,45 @@ class ClientAdmin(admin.ModelAdmin):
             if not client.is_active:
                 messages.error(request, f"Cannot generate post for inactive client: {client.name}")
             else:
-                # Run the task synchronously
-                generate_blog_posts(client_id)
-                messages.success(request, f"Blog post generated successfully for {client.name}")
+                task = generate_blog_posts.delay(client_id)
+                request.session[f'blog_generation_task_{client_id}'] = task.id
+                messages.info(request, f"Blog post generation started for {client.name}. This may take a few minutes.")
+                
         except Client.DoesNotExist:
             messages.error(request, "Client not found")
         except Exception as e:
-            messages.error(request, f"Error generating post: {str(e)}")
+            messages.error(request, f"Error starting blog generation: {str(e)}")
+            logger.exception("Error in generate_post_view")
         
         return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:blogs_client_changelist')))
+
+    def upcoming_posts_view(self, request):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        
+        now = timezone.localtime(timezone.now())
+        active_clients = Client.objects.filter(is_active=True)
+        
+        upcoming_posts = []
+        for client in active_clients:
+            next_post = client.get_next_post_datetime()
+            if next_post <= now + timezone.timedelta(hours=48):
+                upcoming_posts.append({
+                    'client': client,
+                    'scheduled_time': next_post,
+                    'time_until': next_post - now,
+                })
+        
+        upcoming_posts.sort(key=lambda x: x['scheduled_time'])
+        
+        context = {
+            'title': 'Upcoming Blog Posts',
+            'upcoming_posts': upcoming_posts,
+            'now': now,
+            **self.admin_site.each_context(request),
+        }
+        
+        return TemplateResponse(request, 'admin/blogs/upcoming_posts.html', context)
 
     def view_posts(self, obj):
         url = reverse('admin:blogs_blogpost_changelist')
@@ -133,15 +177,15 @@ class ClientAdmin(admin.ModelAdmin):
                 messages.success(request, f"Blog post generated successfully for {client.name}")
             except Exception as e:
                 messages.error(request, f"Error generating post for {client.name}: {str(e)}")
-    
     generate_post_now.short_description = "Generate blog post now"
+
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'client', 'status', 'created_at', 'published_at', 'ai_score_display', 'recheck_ai_score_button')
-    list_filter = ('status', 'client', 'created_at')
-    search_fields = ('title', 'content', 'client__name')
-    readonly_fields = ('created_at', 'published_at', 'ai_score', 'recheck_ai_score_button')
+    list_display = ('title', 'client', 'status', 'created_at', 'published_at', 'ai_score', 'get_subjects')
+    list_filter = ('status', 'client', 'created_at', 'related_event')
+    search_fields = ('title', 'content', 'client__name', 'subjects__name')
+    readonly_fields = ('created_at', 'published_at', 'ai_score')
     actions = ['recheck_ai_scores']
     
     fieldsets = (
@@ -151,8 +195,12 @@ class BlogPostAdmin(admin.ModelAdmin):
         ('Status', {
             'fields': ('status', 'error_message')
         }),
+        ('Topics and Events', {
+            'fields': ('subjects', 'related_event'),
+            'description': 'Associated subjects and special events'
+        }),
         ('AI Detection', {
-            'fields': ('ai_score', 'recheck_ai_score_button'),
+            'fields': ('ai_score',),
             'description': 'AI detection score (0-100, lower is more human-like)'
         }),
         ('Timestamps', {
@@ -161,64 +209,22 @@ class BlogPostAdmin(admin.ModelAdmin):
         })
     )
 
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path(
-                '<int:post_id>/recheck-ai/',
-                self.admin_site.admin_view(self.recheck_ai_score_view),
-                name='blogpost-recheck-ai',
-            ),
-        ]
-        return custom_urls + urls
+    def get_subjects(self, obj):
+        return ", ".join([s.name for s in obj.subjects.all()])
+    get_subjects.short_description = "Subjects"
 
-    def ai_score_display(self, obj):
-        if obj.ai_score is not None:
-            return f"{obj.ai_score:.1f}%"
-        return "-"
-    ai_score_display.short_description = "AI Score"
 
-    def recheck_ai_score_button(self, obj):
-        if obj.id:
-            url = reverse('admin:blogpost-recheck-ai', args=[obj.id])
-            return format_html(
-                '<a class="button" href="{}">Recheck AI Score</a>',
-                url
-            )
-        return ""
-    recheck_ai_score_button.short_description = "Recheck Score"
-    recheck_ai_score_button.allow_tags = True
+@admin.register(BlogSubject)
+class BlogSubjectAdmin(admin.ModelAdmin):
+    list_display = ('name', 'client', 'usage_count', 'last_used')
+    list_filter = ('client',)
+    search_fields = ('name', 'client__name')
+    readonly_fields = ('usage_count', 'last_used')
 
-    def recheck_ai_score_view(self, request, post_id):
-        if not request.user.is_staff:
-            raise PermissionDenied
-        
-        try:
-            from .tasks import check_ai_score
-            check_ai_score(post_id)
-            messages.success(request, "AI score check initiated")
-        except Exception as e:
-            messages.error(request, f"Error checking AI score: {str(e)}")
-        
-        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:blogs_blogpost_changelist')))
 
-    def recheck_ai_scores(self, request, queryset):
-        from .tasks import check_ai_score
-        success_count = 0
-        error_count = 0
-        
-        for post in queryset:
-            try:
-                # Run synchronously for bulk actions to avoid Redis issues
-                check_ai_score(post.id)
-                success_count += 1
-            except Exception as e:
-                error_count += 1
-                messages.error(request, f"Error checking AI score for post '{post.title}': {str(e)}")
-        
-        if success_count > 0:
-            messages.success(request, f"Successfully checked AI scores for {success_count} posts")
-        if error_count > 0:
-            messages.warning(request, f"Failed to check AI scores for {error_count} posts")
-            
-    recheck_ai_scores.short_description = "Recheck AI scores"
+@admin.register(SpecialEvent)
+class SpecialEventAdmin(admin.ModelAdmin):
+    list_display = ('name', 'date', 'importance_level')
+    list_filter = ('importance_level', 'date')
+    search_fields = ('name', 'description')
+    ordering = ('date',)

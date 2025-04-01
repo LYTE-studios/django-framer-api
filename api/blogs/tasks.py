@@ -2,7 +2,9 @@ from openai import OpenAI
 from celery import shared_task
 from django.utils import timezone
 from django.conf import settings
-from .models import Client, BlogPost
+from .models import Client, BlogPost, SpecialEvent, BlogSubject
+from django.db.models import Q
+from datetime import timedelta
 import logging
 import os
 import requests
@@ -76,8 +78,55 @@ def check_ai_score(blog_post_id):
         logger.error(f"Unexpected error checking AI score for post {blog_post_id}")
         logger.exception(e)
 
-@shared_task
-def generate_blog_posts(client_id=None):
+def get_relevant_event():
+    """
+    Check for any important events within a 7-day window of the current date
+    Returns the most important event if found, otherwise None
+    """
+    today = timezone.now().date()
+    date_range = (today - timedelta(days=3), today + timedelta(days=7))
+    
+    return SpecialEvent.objects.filter(
+        date__range=date_range,
+        importance_level__gte=3  # Only consider more important events
+    ).order_by('-importance_level', 'date').first()
+
+def extract_subjects(content):
+    """
+    Extract potential subjects from the blog post content using GPT
+    Returns a list of subject strings
+    """
+    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
+    
+    completion = client.chat.completions.create(
+        model="gpt-3.5-turbo",
+        messages=[
+            {"role": "system", "content": "Extract 2-3 main subjects/topics from this blog post. Respond with only the subjects, one per line."},
+            {"role": "user", "content": content}
+        ]
+    )
+    
+    subjects = completion.choices[0].message.content.strip().split('\n')
+    return [s.strip() for s in subjects if s.strip()]
+
+def get_avoid_subjects(client_obj, lookback_days=90):
+    """
+    Get subjects to avoid based on recent usage
+    Returns a list of subject names
+    """
+    recent_date = timezone.now() - timedelta(days=lookback_days)
+    recent_subjects = BlogSubject.objects.filter(
+        client=client_obj,
+        last_used__gte=recent_date
+    ).order_by('-usage_count')[:10]
+    
+    return [s.name for s in recent_subjects]
+
+def generate_blog_posts_sync(client_id=None):
+    """
+    Synchronous version of blog post generation
+    Returns the created BlogPost object or None if unsuccessful
+    """
     # Get API key from environment first, then settings
     api_key = os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY
     if not api_key:
@@ -90,17 +139,29 @@ def generate_blog_posts(client_id=None):
     client = OpenAI(api_key=api_key)
     
     if client_id:
-        # Generate for specific client
         try:
             client_obj = Client.objects.get(id=client_id)
             if not client_obj.is_active:
-                return
+                return None
+            
+            # Check for relevant events and subjects to avoid
+            relevant_event = get_relevant_event()
+            avoid_subjects = get_avoid_subjects(client_obj)
             
             # Prepare the system message with tone of voice examples
             system_message = client_obj.gpt_prompt + "\n\n"
             if client_obj.tone_of_voice:
                 system_message += client_obj.tone_of_voice.get_formatted_examples()
-            system_message += "\nPlease generate a blog post that matches this tone of voice while addressing the client's specific needs."
+            system_message += "\nPlease generate a blog post that matches this tone of voice for a client named " + client_obj.name
+            system_message += "\nTheir company description is: " + client_obj.description
+            
+            if relevant_event:
+                system_message += f"\nImportant: Consider incorporating or referencing this upcoming event if relevant: {relevant_event.name} ({relevant_event.date}). Event description: {relevant_event.description}"
+            
+            if avoid_subjects:
+                system_message += f"\nPlease avoid these recently covered subjects: {', '.join(avoid_subjects)}"
+            
+            system_message += "\nPlease generate this text with a professional tone, but integrate slight imperfections and natural human nuances such as subtle colloquialisms appropriate for professional contexts and minor grammatical quirks to enhance authenticity. Keep it in touch with the tone of voice that we've provided you with."
 
             # Generate blog post using ChatGPT
             completion = client.chat.completions.create(
@@ -113,8 +174,8 @@ def generate_blog_posts(client_id=None):
             
             # Extract content from response
             full_content = completion.choices[0].message.content
-            title = full_content.split('\n')[0].replace('Title: ', '')  # First line as title, remove "Title: " if present
-            content = '\n'.join(full_content.split('\n')[1:]).strip()  # Rest of the content
+            title = full_content.split('\n')[0].replace('Title: ', '')
+            content = '\n'.join(full_content.split('\n')[1:]).strip()
             
             # Create blog post
             blog_post = BlogPost.objects.create(
@@ -122,88 +183,63 @@ def generate_blog_posts(client_id=None):
                 title=title,
                 content=content,
                 status='published',
-                published_at=timezone.now()
+                published_at=timezone.now(),
+                related_event=relevant_event if relevant_event else None
             )
             
-            # Trigger AI score check
-            check_ai_score.delay(blog_post.id)
+            # Extract and save subjects
+            extracted_subjects = extract_subjects(content)
+            for subject_name in extracted_subjects:
+                subject, created = BlogSubject.objects.get_or_create(
+                    name=subject_name,
+                    client=client_obj,
+                    defaults={'usage_count': 1}
+                )
+                if not created:
+                    subject.usage_count += 1
+                    subject.save()
+                blog_post.subjects.add(subject)
+            
+            # Check AI score synchronously
+            check_ai_score(blog_post.id)
             
             # Update client's last post time
             client_obj.last_post_generated = timezone.now()
             client_obj.save()
             
+            return blog_post
+            
         except Exception as e:
             logger.error(f"Error generating post: {str(e)}")
-            BlogPost.objects.create(
+            error_post = BlogPost.objects.create(
                 client=client_obj,
                 title="Error Generating Post",
                 content="",
                 status='error',
                 error_message=str(e)
             )
+            return error_post
+    return None
+
+@shared_task
+def generate_blog_posts(client_id=None):
+    """
+    Asynchronous version of blog post generation
+    """
+    if client_id:
+        return generate_blog_posts_sync(client_id)
     else:
         # Generate for all due clients
         clients = Client.objects.filter(is_active=True)
         for client_obj in clients:
             if client_obj.is_due_for_post():
-                try:
-                    # Prepare the system message with tone of voice examples
-                    system_message = client_obj.gpt_prompt + "\n\n"
-                    if client_obj.tone_of_voice:
-                        system_message += client_obj.tone_of_voice.get_formatted_examples()
-                    system_message += "\nPlease generate a blog post that matches this tone of voice while addressing the client's specific needs."
-
-                    # Generate blog post using ChatGPT
-                    completion = client.chat.completions.create(
-                        model="gpt-4",
-                        messages=[
-                            {"role": "system", "content": system_message},
-                            {"role": "user", "content": "Generate a blog post"}
-                        ]
-                    )
-                    
-                    # Extract content from response
-                    full_content = completion.choices[0].message.content
-                    title = full_content.split('\n')[0].replace('Title: ', '')  # First line as title, remove "Title: " if present
-                    content = '\n'.join(full_content.split('\n')[1:]).strip()  # Rest of the content
-                    
-                    # Create blog post
-                    blog_post = BlogPost.objects.create(
-                        client=client_obj,
-                        title=title,
-                        content=content,
-                        status='published',
-                        published_at=timezone.now()
-                    )
-                    
-                    # Trigger AI score check
-                    check_ai_score.delay(blog_post.id)
-                    
-                    # Update client's last post time
-                    client_obj.last_post_generated = timezone.now()
-                    client_obj.save()
-                    
-                except Exception as e:
-                    logger.error(f"Error generating post: {str(e)}")
-                    BlogPost.objects.create(
-                        client=client_obj,
-                        title="Error Generating Post",
-                        content="",
-                        status='error',
-                        error_message=str(e)
-                    )
+                generate_blog_posts_sync(client_obj.id)
 
 @shared_task
 def retry_failed_posts():
-    # Get API key from environment first, then settings
-    api_key = os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY
-    if not api_key:
-        logger.error("No OpenAI API key found")
-        return
-
-    # Initialize OpenAI client
-    client = OpenAI(api_key=api_key)
-    
+    """
+    Retry generating posts that previously failed
+    """
     # Get the latest failed post for each client
     failed_posts = BlogPost.objects.filter(
         status='error'
@@ -213,41 +249,11 @@ def retry_failed_posts():
         client_obj = post.client
         if client_obj.is_due_for_post():
             try:
-                # Prepare the system message with tone of voice examples
-                system_message = client_obj.gpt_prompt + "\n\n"
-                if client_obj.tone_of_voice:
-                    system_message += client_obj.tone_of_voice.get_formatted_examples()
-                system_message += "\nPlease generate a blog post that matches this tone of voice while addressing the client's specific needs."
-
-                # Generate blog post using ChatGPT
-                completion = client.chat.completions.create(
-                    model="gpt-4",
-                    messages=[
-                        {"role": "system", "content": system_message},
-                        {"role": "user", "content": "Generate a blog post"}
-                    ]
-                )
-                
-                # Extract content from response
-                full_content = completion.choices[0].message.content
-                title = full_content.split('\n')[0].replace('Title: ', '')  # First line as title, remove "Title: " if present
-                content = '\n'.join(full_content.split('\n')[1:]).strip()  # Rest of the content
-                
-                # Update the failed post
-                post.title = title
-                post.content = content
-                post.status = 'published'
-                post.published_at = timezone.now()
-                post.error_message = None
-                post.save()
-                
-                # Trigger AI score check
-                check_ai_score.delay(post.id)
-                
-                # Update client's last post time
-                client_obj.last_post_generated = timezone.now()
-                client_obj.save()
-                
+                # Generate new post using the sync function
+                new_post = generate_blog_posts_sync(client_obj.id)
+                if new_post and new_post.status == 'published':
+                    # Delete the failed post if new one was successful
+                    post.delete()
             except Exception as e:
-                logger.error(f"Error retrying failed post: {str(e)}")
+                logger.error(f"Error retrying failed post for client {client_obj.name}: {str(e)}")
                 continue

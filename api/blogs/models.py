@@ -46,6 +46,23 @@ class Client(models.Model):
     def __str__(self):
         return self.name
 
+    def get_next_post_datetime(self):
+        """Get the next scheduled post datetime"""
+        if not self.last_post_generated:
+            current_time = timezone.localtime(timezone.now())
+            if current_time.time() >= self.post_time:
+                # If we're past today's post time, schedule for tomorrow
+                next_date = current_time.date() + timezone.timedelta(days=1)
+            else:
+                # If we haven't reached today's post time, schedule for today
+                next_date = current_time.date()
+        else:
+            # Calculate next post date based on last post
+            next_date = self.last_post_generated.date() + timezone.timedelta(days=self.post_interval_days)
+        
+        # Combine the date with the scheduled post time
+        return timezone.make_aware(timezone.datetime.combine(next_date, self.post_time))
+
     def is_due_for_post(self):
         if not self.last_post_generated:
             return True
@@ -58,9 +75,33 @@ class Client(models.Model):
         current_time = timezone.localtime(timezone.now())
         
         # Check if we're on or past the next post date and if current time is past post time
-        return (current_time.date() > next_post_date or 
-                (current_time.date() == next_post_date and 
+        return (current_time.date() > next_post_date or
+                (current_time.date() == next_post_date and
                  current_time.time() >= self.post_time))
+
+class BlogSubject(models.Model):
+    name = models.CharField(max_length=200)
+    last_used = models.DateTimeField(auto_now=True)
+    usage_count = models.IntegerField(default=1)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='subjects')
+
+    def __str__(self):
+        return f"{self.name} ({self.client.name})"
+
+    class Meta:
+        unique_together = ['name', 'client']
+
+class SpecialEvent(models.Model):
+    name = models.CharField(max_length=200)
+    date = models.DateField()
+    description = models.TextField()
+    importance_level = models.IntegerField(default=1, help_text="1-5, higher means more important")
+    
+    def __str__(self):
+        return f"{self.name} ({self.date})"
+
+    class Meta:
+        ordering = ['date']
 
 class BlogPost(models.Model):
     STATUS_CHOICES = [
@@ -77,6 +118,8 @@ class BlogPost(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
     ai_score = models.FloatField(null=True, blank=True, help_text="AI detection score (0-100, lower is more human-like)")
+    subjects = models.ManyToManyField(BlogSubject, related_name='blog_posts')
+    related_event = models.ForeignKey(SpecialEvent, null=True, blank=True, on_delete=models.SET_NULL, related_name='blog_posts')
 
     def __str__(self):
         return f"{self.client.name} - {self.title}"
