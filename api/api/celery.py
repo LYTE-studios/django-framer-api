@@ -1,6 +1,10 @@
 import os
 from celery import Celery
 from celery.schedules import crontab
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Set the default Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api.settings')

@@ -10,6 +10,8 @@ services:
       - media_volume:/app/media
     ports:
       - "8000:8000"
+    env_file:
+      - .env
     environment:
       - DJANGO_DEBUG=True
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
@@ -23,6 +25,8 @@ services:
     command: celery -A api worker --loglevel=info
     volumes:
       - ./api:/app
+    env_file:
+      - .env
     environment:
       - DJANGO_DEBUG=True
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -35,6 +39,8 @@ services:
     command: celery -A api beat --loglevel=info
     volumes:
       - ./api:/app
+    env_file:
+      - .env
     environment:
       - DJANGO_DEBUG=True
       - CELERY_BROKER_URL=redis://redis:6379/0

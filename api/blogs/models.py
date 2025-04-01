@@ -1,9 +1,41 @@
 from django.db import models
 from django.utils import timezone
 
+class ToneOfVoice(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(help_text="Description of this tone of voice")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+    def get_formatted_examples(self):
+        """Get the examples in a format suitable for GPT prompt"""
+        examples = self.example_posts.all()
+        if not examples:
+            return ""
+        
+        formatted = "Here are some example posts in the desired tone of voice:\n\n"
+        for i, example in enumerate(examples, 1):
+            formatted += f"Example {i}:\n"
+            formatted += f"Title: {example.title}\n"
+            formatted += f"Content:\n{example.content}\n\n"
+        return formatted
+
+class ToneOfVoiceExample(models.Model):
+    tone_of_voice = models.ForeignKey(ToneOfVoice, on_delete=models.CASCADE, related_name='example_posts')
+    title = models.CharField(max_length=200)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.tone_of_voice.name} - {self.title}"
+
 class Client(models.Model):
     name = models.CharField(max_length=200)
-    gpt_prompt = models.TextField(help_text="Custom GPT prompt for this client's tone of voice")
+    tone_of_voice = models.ForeignKey(ToneOfVoice, on_delete=models.SET_NULL, null=True, related_name='clients')
+    gpt_prompt = models.TextField(help_text="Description of the client's needs and industry-specific requirements")
     post_interval_days = models.IntegerField(default=1, help_text="Days between each blog post generation")
     post_time = models.TimeField(default=timezone.datetime.strptime('09:00', '%H:%M').time(), help_text="Time of day to post (24-hour format)")
     last_post_generated = models.DateTimeField(null=True, blank=True)
