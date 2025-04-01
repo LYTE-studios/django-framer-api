@@ -153,8 +153,7 @@ def generate_blog_posts_sync(client_id=None):
             if client_obj.tone_of_voice:
                 system_message += client_obj.tone_of_voice.get_formatted_examples()
             system_message += "\nPlease generate a blog post that matches this tone of voice for a client named " + client_obj.name
-            system_message += "\nTheir company description is: " + client_obj.description
-            
+
             if relevant_event:
                 system_message += f"\nImportant: Consider incorporating or referencing this upcoming event if relevant: {relevant_event.name} ({relevant_event.date}). Event description: {relevant_event.description}"
             
