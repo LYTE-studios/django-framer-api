@@ -5,12 +5,76 @@ from django.conf import settings
 from .models import Client, BlogPost
 import logging
 import os
+import requests
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
 logger = logging.getLogger(__name__)
+
+@shared_task
+def check_ai_score(blog_post_id):
+    """
+    Check the AI score of a blog post using ZeroGPT API
+    Returns a score from 0-100 where lower scores indicate more human-like text
+    """
+    try:
+        blog_post = BlogPost.objects.get(id=blog_post_id)
+        
+        # ZeroGPT API endpoint
+        url = "https://api.zerogpt.com/api/detect/detectText"
+        
+        # Get API key from environment
+        api_key = os.getenv('ZEROGPT_API_KEY')
+        if not api_key:
+            logger.error("No ZeroGPT API key found")
+            return
+        
+        # Prepare request
+        headers = {
+            "ApiKey": api_key,
+            "Content-Type": "application/json"
+        }
+        
+        data = {
+            "input_text": blog_post.content
+        }
+        
+        # Create a session with custom SSL settings
+        session = requests.Session()
+        session.verify = False  # Disable SSL verification
+        session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        
+        # Make request to ZeroGPT API
+        response = session.post(url, headers=headers, json=data)
+        response.raise_for_status()
+        
+        logger.info(f"ZeroGPT API Response: {response.text}")
+        
+        # Extract AI score from response
+        result = response.json()
+
+        ai_score = result["data"]["fakePercentage"]
+        
+        if ai_score is not None:
+            # Update blog post with AI score
+            blog_post.ai_score = ai_score
+            blog_post.save()
+            logger.info(f"Updated AI score for blog post {blog_post_id}: {ai_score}")
+        else:
+            logger.error(f"No AI score returned for blog post {blog_post_id}")
+            
+    except BlogPost.DoesNotExist:
+        logger.error(f"Blog post {blog_post_id} not found")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error checking AI score for post {blog_post_id}: {str(e)}")
+        logger.error(f"Request details - URL: {url}, Headers: {headers}, Data: {data}")
+        if hasattr(e.response, 'text'):
+            logger.error(f"Response text: {e.response.text}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking AI score for post {blog_post_id}")
+        logger.exception(e)
 
 @shared_task
 def generate_blog_posts(client_id=None):
@@ -61,6 +125,9 @@ def generate_blog_posts(client_id=None):
                 published_at=timezone.now()
             )
             
+            # Trigger AI score check
+            check_ai_score.delay(blog_post.id)
+            
             # Update client's last post time
             client_obj.last_post_generated = timezone.now()
             client_obj.save()
@@ -108,6 +175,9 @@ def generate_blog_posts(client_id=None):
                         status='published',
                         published_at=timezone.now()
                     )
+                    
+                    # Trigger AI score check
+                    check_ai_score.delay(blog_post.id)
                     
                     # Update client's last post time
                     client_obj.last_post_generated = timezone.now()
@@ -170,6 +240,9 @@ def retry_failed_posts():
                 post.published_at = timezone.now()
                 post.error_message = None
                 post.save()
+                
+                # Trigger AI score check
+                check_ai_score.delay(post.id)
                 
                 # Update client's last post time
                 client_obj.last_post_generated = timezone.now()

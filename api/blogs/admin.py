@@ -138,10 +138,11 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'client', 'status', 'created_at', 'published_at')
+    list_display = ('title', 'client', 'status', 'created_at', 'published_at', 'ai_score_display', 'recheck_ai_score_button')
     list_filter = ('status', 'client', 'created_at')
     search_fields = ('title', 'content', 'client__name')
-    readonly_fields = ('created_at', 'published_at')
+    readonly_fields = ('created_at', 'published_at', 'ai_score', 'recheck_ai_score_button')
+    actions = ['recheck_ai_scores']
     
     fieldsets = (
         (None, {
@@ -150,8 +151,74 @@ class BlogPostAdmin(admin.ModelAdmin):
         ('Status', {
             'fields': ('status', 'error_message')
         }),
+        ('AI Detection', {
+            'fields': ('ai_score', 'recheck_ai_score_button'),
+            'description': 'AI detection score (0-100, lower is more human-like)'
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'published_at'),
             'classes': ('collapse',)
         })
     )
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:post_id>/recheck-ai/',
+                self.admin_site.admin_view(self.recheck_ai_score_view),
+                name='blogpost-recheck-ai',
+            ),
+        ]
+        return custom_urls + urls
+
+    def ai_score_display(self, obj):
+        if obj.ai_score is not None:
+            return f"{obj.ai_score:.1f}%"
+        return "-"
+    ai_score_display.short_description = "AI Score"
+
+    def recheck_ai_score_button(self, obj):
+        if obj.id:
+            url = reverse('admin:blogpost-recheck-ai', args=[obj.id])
+            return format_html(
+                '<a class="button" href="{}">Recheck AI Score</a>',
+                url
+            )
+        return ""
+    recheck_ai_score_button.short_description = "Recheck Score"
+    recheck_ai_score_button.allow_tags = True
+
+    def recheck_ai_score_view(self, request, post_id):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        
+        try:
+            from .tasks import check_ai_score
+            check_ai_score(post_id)
+            messages.success(request, "AI score check initiated")
+        except Exception as e:
+            messages.error(request, f"Error checking AI score: {str(e)}")
+        
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:blogs_blogpost_changelist')))
+
+    def recheck_ai_scores(self, request, queryset):
+        from .tasks import check_ai_score
+        success_count = 0
+        error_count = 0
+        
+        for post in queryset:
+            try:
+                # Run synchronously for bulk actions to avoid Redis issues
+                check_ai_score(post.id)
+                success_count += 1
+            except Exception as e:
+                error_count += 1
+                messages.error(request, f"Error checking AI score for post '{post.title}': {str(e)}")
+        
+        if success_count > 0:
+            messages.success(request, f"Successfully checked AI scores for {success_count} posts")
+        if error_count > 0:
+            messages.warning(request, f"Failed to check AI scores for {error_count} posts")
+            
+    recheck_ai_scores.short_description = "Recheck AI scores"

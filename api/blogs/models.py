@@ -76,6 +76,7 @@ class BlogPost(models.Model):
     error_message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     published_at = models.DateTimeField(null=True, blank=True)
+    ai_score = models.FloatField(null=True, blank=True, help_text="AI detection score (0-100, lower is more human-like)")
 
     def __str__(self):
         return f"{self.client.name} - {self.title}"
