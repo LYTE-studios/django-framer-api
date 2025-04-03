@@ -189,8 +189,46 @@ class BlogPostAdmin(admin.ModelAdmin):
     list_display = ('title', 'get_source', 'status', 'created_at', 'published_at', 'ai_score', 'get_subjects')
     list_filter = ('status', 'client', 'created_at', 'related_event')
     search_fields = ('title', 'content', 'client__name', 'subjects__name')
-    readonly_fields = ('created_at', 'published_at', 'ai_score')
+    readonly_fields = ('created_at', 'published_at', 'ai_score', 'recalculate_ai_score_button')
     actions = ['recheck_ai_scores']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:post_id>/recalculate-ai-score/',
+                self.admin_site.admin_view(self.recalculate_ai_score_view),
+                name='blogpost-recalculate-ai-score',
+            ),
+        ]
+        return custom_urls + urls
+
+    def recalculate_ai_score_button(self, obj):
+        if obj and obj.id:  # Only show button if object exists
+            url = reverse('admin:blogpost-recalculate-ai-score', args=[obj.id])
+            return format_html(
+                '<a class="button" href="{}">Recalculate AI Score</a>',
+                url
+            )
+        return ""
+    recalculate_ai_score_button.short_description = "Recalculate Score"
+
+    def recalculate_ai_score_view(self, request, post_id):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        
+        try:
+            post = BlogPost.objects.get(id=post_id)
+            from .tasks import check_ai_score
+            check_ai_score(post_id)
+            messages.success(request, f"AI score recalculation started for post: {post.title}")
+        except BlogPost.DoesNotExist:
+            messages.error(request, "Blog post not found")
+        except Exception as e:
+            messages.error(request, f"Error recalculating AI score: {str(e)}")
+            logger.exception("Error in recalculate_ai_score_view")
+        
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:blogs_blogpost_changelist')))
     
     def get_source(self, obj):
         if obj.client is None:
@@ -213,7 +251,7 @@ class BlogPostAdmin(admin.ModelAdmin):
                 'description': 'Associated subjects and special events'
             }),
             ('AI Detection', {
-                'fields': ('ai_score',),
+                'fields': ('ai_score', 'recalculate_ai_score_button'),
                 'description': 'AI detection score (0-100, lower is more human-like)'
             }),
             ('Timestamps', {

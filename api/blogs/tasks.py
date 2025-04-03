@@ -43,9 +43,8 @@ def check_ai_score(blog_post_id):
             "input_text": blog_post.content
         }
         
-        # Create a session with custom SSL settings
+        # Create a session with proper SSL verification
         session = requests.Session()
-        session.verify = False  # Disable SSL verification
         session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
         
         # Make request to ZeroGPT API
@@ -56,16 +55,24 @@ def check_ai_score(blog_post_id):
         
         # Extract AI score from response
         result = response.json()
-
-        ai_score = result["data"]["fakePercentage"]
         
-        if ai_score is not None:
-            # Update blog post with AI score
-            blog_post.ai_score = ai_score
-            blog_post.save()
-            logger.info(f"Updated AI score for blog post {blog_post_id}: {ai_score}")
+        if "data" in result and "fakePercentage" in result["data"]:
+            ai_score = result["data"]["fakePercentage"]
+            
+            # Validate and normalize the score
+            try:
+                ai_score = float(ai_score)
+                # Ensure score is within 0-100 range
+                ai_score = max(0, min(100, ai_score))
+                
+                # Update blog post with AI score
+                blog_post.ai_score = ai_score
+                blog_post.save()
+                logger.info(f"Updated AI score for blog post {blog_post_id}: {ai_score}")
+            except (ValueError, TypeError):
+                logger.error(f"Invalid AI score value received: {ai_score}")
         else:
-            logger.error(f"No AI score returned for blog post {blog_post_id}")
+            logger.error(f"No AI score returned for blog post {blog_post_id}. Response: {result}")
             
     except BlogPost.DoesNotExist:
         logger.error(f"Blog post {blog_post_id} not found")
