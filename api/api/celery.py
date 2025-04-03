@@ -22,7 +22,7 @@ app.autodiscover_tasks()
 app.conf.beat_schedule = {
     'generate-blog-posts': {
         'task': 'blogs.tasks.generate_blog_posts',
-        'schedule': crontab(minute='*/30'),  # Run every 30 minutes
+        'schedule': crontab(minute='*'),  # Run every minute
     },
     'retry-failed-posts': {
         'task': 'blogs.tasks.retry_failed_posts',

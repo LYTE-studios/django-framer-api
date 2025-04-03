@@ -4,6 +4,7 @@ from django.utils import timezone
 class ToneOfVoice(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(help_text="Description of this tone of voice")
+    examples = models.ManyToManyField('BlogPost', related_name='used_as_example_for', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -12,7 +13,8 @@ class ToneOfVoice(models.Model):
 
     def get_formatted_examples(self):
         """Get the examples in a format suitable for GPT prompt"""
-        examples = self.example_posts.all()
+        # Get example posts with low AI scores (more human-like) if available
+        examples = self.examples.filter(status='published').order_by('ai_score')[:3]
         if not examples:
             return ""
         
@@ -21,16 +23,9 @@ class ToneOfVoice(models.Model):
             formatted += f"Example {i}:\n"
             formatted += f"Title: {example.title}\n"
             formatted += f"Content:\n{example.content}\n\n"
+            if example.ai_score is not None:
+                formatted += f"(AI Score: {example.ai_score})\n\n"
         return formatted
-
-class ToneOfVoiceExample(models.Model):
-    tone_of_voice = models.ForeignKey(ToneOfVoice, on_delete=models.CASCADE, related_name='example_posts')
-    title = models.CharField(max_length=200)
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.tone_of_voice.name} - {self.title}"
 
 class Client(models.Model):
     name = models.CharField(max_length=200)
@@ -110,7 +105,7 @@ class BlogPost(models.Model):
         ('error', 'Error'),
     ]
 
-    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='blog_posts')
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='blog_posts', null=True, blank=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
@@ -122,7 +117,9 @@ class BlogPost(models.Model):
     related_event = models.ForeignKey(SpecialEvent, null=True, blank=True, on_delete=models.SET_NULL, related_name='blog_posts')
 
     def __str__(self):
-        return f"{self.client.name} - {self.title}"
+        if self.client:
+            return f"{self.client.name} - {self.title}"
+        return f"Example: {self.title}"
 
     class Meta:
         ordering = ['-created_at']

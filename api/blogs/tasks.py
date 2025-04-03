@@ -224,13 +224,24 @@ def generate_blog_posts_sync(client_id=None):
 def generate_blog_posts(client_id=None):
     """
     Asynchronous version of blog post generation
+    Runs every minute to check for posts that need to be generated
     """
     if client_id:
         return generate_blog_posts_sync(client_id)
-    else:
-        # Generate for all due clients
-        clients = Client.objects.filter(is_active=True)
-        for client_obj in clients:
+    
+    current_time = timezone.localtime(timezone.now())
+    
+    # Get all active clients whose post_time matches current time
+    clients = Client.objects.filter(
+        is_active=True,
+        post_time__hour=current_time.hour,
+        post_time__minute=current_time.minute
+    )
+    
+    for client_obj in clients:
+        # Double check if post is actually due using the full logic
+        next_post_time = client_obj.get_next_post_datetime()
+        if next_post_time.date() == current_time.date():  # Only generate if it's due today
             if client_obj.is_due_for_post():
                 generate_blog_posts_sync(client_obj.id)
 

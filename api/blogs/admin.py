@@ -6,17 +6,11 @@ from django.utils.html import format_html
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.core.exceptions import PermissionDenied
-from .models import Client, BlogPost, ToneOfVoice, ToneOfVoiceExample, BlogSubject, SpecialEvent
+from .models import Client, BlogPost, ToneOfVoice, BlogSubject, SpecialEvent
 from .tasks import generate_blog_posts
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-class ToneOfVoiceExampleInline(admin.TabularInline):
-    model = ToneOfVoiceExample
-    extra = 1
-    fields = ('title', 'content')
 
 
 @admin.register(ToneOfVoice)
@@ -24,11 +18,15 @@ class ToneOfVoiceAdmin(admin.ModelAdmin):
     list_display = ('name', 'created_at', 'updated_at', 'example_count')
     search_fields = ('name', 'description')
     readonly_fields = ('created_at', 'updated_at')
-    inlines = [ToneOfVoiceExampleInline]
+    filter_horizontal = ('examples',)
 
     fieldsets = (
         (None, {
             'fields': ('name', 'description')
+        }),
+        ('Example Posts', {
+            'fields': ('examples',),
+            'description': 'Select blog posts to use as examples for this tone of voice'
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -36,8 +34,14 @@ class ToneOfVoiceAdmin(admin.ModelAdmin):
         })
     )
 
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if 'examples' in form.base_fields:
+            form.base_fields['examples'].queryset = BlogPost.objects.all()
+        return form
+
     def example_count(self, obj):
-        return obj.example_posts.count()
+        return obj.examples.count()
     example_count.short_description = "Number of Examples"
 
 
@@ -182,32 +186,41 @@ class ClientAdmin(admin.ModelAdmin):
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'client', 'status', 'created_at', 'published_at', 'ai_score', 'get_subjects')
+    list_display = ('title', 'get_source', 'status', 'created_at', 'published_at', 'ai_score', 'get_subjects')
     list_filter = ('status', 'client', 'created_at', 'related_event')
     search_fields = ('title', 'content', 'client__name', 'subjects__name')
     readonly_fields = ('created_at', 'published_at', 'ai_score')
     actions = ['recheck_ai_scores']
     
-    fieldsets = (
-        (None, {
-            'fields': ('client', 'title', 'content')
-        }),
-        ('Status', {
-            'fields': ('status', 'error_message')
-        }),
-        ('Topics and Events', {
-            'fields': ('subjects', 'related_event'),
-            'description': 'Associated subjects and special events'
-        }),
-        ('AI Detection', {
-            'fields': ('ai_score',),
-            'description': 'AI detection score (0-100, lower is more human-like)'
-        }),
-        ('Timestamps', {
-            'fields': ('created_at', 'published_at'),
-            'classes': ('collapse',)
-        })
-    )
+    def get_source(self, obj):
+        if obj.client is None:
+            tones = obj.used_as_example_for.all()
+            if tones.exists():
+                return f"Example for {', '.join(t.name for t in tones)}"
+        return obj.client.name if obj.client else "-"
+    get_source.short_description = "Source"
+    
+    def get_fieldsets(self, request, obj=None):
+        return (
+            (None, {
+                'fields': ('client', 'title', 'content')
+            }),
+            ('Status', {
+                'fields': ('status', 'error_message')
+            }),
+            ('Topics and Events', {
+                'fields': ('subjects', 'related_event'),
+                'description': 'Associated subjects and special events'
+            }),
+            ('AI Detection', {
+                'fields': ('ai_score',),
+                'description': 'AI detection score (0-100, lower is more human-like)'
+            }),
+            ('Timestamps', {
+                'fields': ('created_at', 'published_at'),
+                'classes': ('collapse',)
+            })
+        )
 
     def get_subjects(self, obj):
         return ", ".join([s.name for s in obj.subjects.all()])
