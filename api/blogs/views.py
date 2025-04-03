@@ -1,7 +1,9 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, generics
+from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from .models import Client, BlogPost
 from .serializers import ClientSerializer, BlogPostSerializer
 
@@ -53,3 +55,19 @@ class BlogPostViewSet(viewsets.ModelViewSet):
         if client_id:
             queryset = queryset.filter(client_id=client_id)
         return queryset
+
+
+@permission_classes([AllowAny])
+class ClientPostsView(generics.ListAPIView):
+    """
+    Get all published blog posts for a specific client.
+    No authentication required.
+    """
+    serializer_class = BlogPostSerializer
+
+    def get_queryset(self):
+        client = get_object_or_404(Client, pk=self.kwargs['client_id'])
+        return BlogPost.objects.filter(
+            client=client,
+            status='published'
+        ).order_by('-published_at')
