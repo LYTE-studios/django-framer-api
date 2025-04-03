@@ -129,6 +129,35 @@ def get_avoid_subjects(client_obj, lookback_days=90):
     
     return [s.name for s in recent_subjects]
 
+def generate_thumbnail_description(client, title, content):
+    """
+    Generate a simple thumbnail description based on the blog post content
+    """
+    try:
+        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
+        
+        prompt = f"""Based on this blog post title and content, generate a SIMPLE description for a thumbnail image.
+        The description should be brief (1-2 sentences) and focus on key visual elements that represent the post's main topic.
+        Keep it minimalistic and easy to visualize.
+
+        Blog Title: {title}
+        Blog Content: {content}
+
+        Respond with ONLY the image description, nothing else."""
+
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a visual designer creating simple, minimalistic thumbnail descriptions."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        
+        return completion.choices[0].message.content.strip()
+    except Exception as e:
+        logger.error(f"Error generating thumbnail description: {str(e)}")
+        return None
+
 def generate_blog_posts_sync(client_id=None):
     """
     Synchronous version of blog post generation
@@ -183,11 +212,15 @@ def generate_blog_posts_sync(client_id=None):
             title = full_content.split('\n')[0].replace('Title: ', '')
             content = '\n'.join(full_content.split('\n')[1:]).strip()
             
+            # Generate thumbnail description
+            thumbnail = generate_thumbnail_description(client, title, content)
+            
             # Create blog post
             blog_post = BlogPost.objects.create(
                 client=client_obj,
                 title=title,
                 content=content,
+                thumbnail=thumbnail,
                 status='published',
                 published_at=timezone.now(),
                 related_event=relevant_event if relevant_event else None
@@ -221,6 +254,7 @@ def generate_blog_posts_sync(client_id=None):
                 client=client_obj,
                 title="Error Generating Post",
                 content="",
+                thumbnail=None,
                 status='error',
                 error_message=str(e)
             )
