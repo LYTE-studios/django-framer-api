@@ -243,6 +243,10 @@ class BlogPostAdmin(admin.ModelAdmin):
             (None, {
                 'fields': ('client', 'title', 'content')
             }),
+            ('Thumbnail', {
+                'fields': ('thumbnail',),
+                'description': 'Generated thumbnail description for image generation'
+            }),
             ('Status', {
                 'fields': ('status', 'error_message')
             }),

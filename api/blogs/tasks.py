@@ -129,12 +129,12 @@ def get_avoid_subjects(client_obj, lookback_days=90):
     
     return [s.name for s in recent_subjects]
 
-def generate_thumbnail_description(client, title, content):
+def generate_thumbnail_description(client_obj, title, content):
     """
     Generate a simple thumbnail description based on the blog post content
     """
     try:
-        client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
+        openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
         
         prompt = f"""Based on this blog post title and content, generate a SIMPLE description for a thumbnail image.
         The description should be brief (1-2 sentences) and focus on key visual elements that represent the post's main topic.
@@ -145,7 +145,7 @@ def generate_thumbnail_description(client, title, content):
 
         Respond with ONLY the image description, nothing else."""
 
-        completion = client.chat.completions.create(
+        completion = openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": "You are a visual designer creating simple, minimalistic thumbnail descriptions."},
@@ -213,7 +213,7 @@ def generate_blog_posts_sync(client_id=None):
             content = '\n'.join(full_content.split('\n')[1:]).strip()
             
             # Generate thumbnail description
-            thumbnail = generate_thumbnail_description(client, title, content)
+            thumbnail = generate_thumbnail_description(client_obj, title, content)
             
             # Create blog post
             blog_post = BlogPost.objects.create(
