@@ -6,6 +6,7 @@ from django.utils.html import format_html
 from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.core.exceptions import PermissionDenied
+from django.db import models
 from .models import Client, BlogPost, ToneOfVoice, BlogSubject, SpecialEvent
 from .tasks import generate_blog_posts
 import logging
@@ -189,7 +190,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     list_display = ('title', 'get_source', 'status', 'created_at', 'published_at', 'ai_score', 'get_subjects')
     list_filter = ('status', 'client', 'created_at', 'related_event')
     search_fields = ('title', 'content', 'client__name', 'subjects__name')
-    readonly_fields = ('created_at', 'published_at', 'ai_score', 'recalculate_ai_score_button')
+    readonly_fields = ('created_at', 'published_at', 'ai_score', 'recalculate_ai_score_button', 'thumbnail_preview', 'regenerate_thumbnail_button')
     actions = ['recheck_ai_scores']
 
     def get_urls(self):
@@ -200,8 +201,57 @@ class BlogPostAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.recalculate_ai_score_view),
                 name='blogpost-recalculate-ai-score',
             ),
+            path(
+                '<int:post_id>/regenerate-thumbnail/',
+                self.admin_site.admin_view(self.regenerate_thumbnail_view),
+                name='blogpost-regenerate-thumbnail',
+            ),
         ]
         return custom_urls + urls
+
+    def regenerate_thumbnail_button(self, obj):
+        if obj and obj.id:
+            url = reverse('admin:blogpost-regenerate-thumbnail', args=[obj.id])
+            return format_html(
+                '<a class="button" href="{}">Regenerate Thumbnail</a>',
+                url
+            )
+        return ""
+    regenerate_thumbnail_button.short_description = "Regenerate"
+
+    def regenerate_thumbnail_view(self, request, post_id):
+        if not request.user.is_staff:
+            raise PermissionDenied
+        
+        try:
+            from .tasks import generate_thumbnail
+            post = BlogPost.objects.get(id=post_id)
+            thumbnail_url = generate_thumbnail(post.client, post.title, post.content)
+            if thumbnail_url:
+                post.thumbnail = thumbnail_url
+                post.save()
+                messages.success(request, f"Thumbnail regenerated for post: {post.title}")
+            else:
+                messages.error(request, "Failed to generate thumbnail")
+        except BlogPost.DoesNotExist:
+            messages.error(request, "Blog post not found")
+        except Exception as e:
+            messages.error(request, f"Error regenerating thumbnail: {str(e)}")
+            logger.exception("Error in regenerate_thumbnail_view")
+        
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER', reverse('admin:blogs_blogpost_changelist')))
+
+    def thumbnail_preview(self, obj):
+        if obj.thumbnail:
+            return format_html(
+                '<div style="margin-bottom: 10px;"><img src="{}" style="max-width: 300px; height: auto;"/></div>'
+                '<div style="margin-bottom: 10px;"><input type="text" value="{}" style="width: 100%;" readonly/></div>',
+                obj.thumbnail,
+                obj.thumbnail
+            )
+        return "No thumbnail available"
+    thumbnail_preview.short_description = "Current Thumbnail"
+
 
     def recalculate_ai_score_button(self, obj):
         if obj and obj.id:  # Only show button if object exists
@@ -244,8 +294,8 @@ class BlogPostAdmin(admin.ModelAdmin):
                 'fields': ('client', 'title', 'content')
             }),
             ('Thumbnail', {
-                'fields': ('thumbnail',),
-                'description': 'Generated thumbnail description for image generation'
+                'fields': ('thumbnail', 'thumbnail_preview', 'regenerate_thumbnail_button'),
+                'description': 'Enter a URL for the thumbnail image or use the regenerate button to create a new one.'
             }),
             ('Status', {
                 'fields': ('status', 'error_message')

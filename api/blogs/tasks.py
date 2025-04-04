@@ -129,16 +129,18 @@ def get_avoid_subjects(client_obj, lookback_days=90):
     
     return [s.name for s in recent_subjects]
 
-def generate_thumbnail_description(client_obj, title, content):
+def generate_thumbnail(client_obj, title, content):
     """
-    Generate a simple thumbnail description based on the blog post content
+    Generate a thumbnail image using DALL-E based on the blog post content
+    Returns the URL of the generated image stored in S3
     """
     try:
         openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
         
+        # First, generate a description for the image
         prompt = f"""Based on this blog post title and content, generate a SIMPLE description for a thumbnail image.
         The description should be brief (1-2 sentences) and focus on key visual elements that represent the post's main topic.
-        Keep it minimalistic and easy to visualize.
+        Keep it minimalistic and easy to visualize. The image should be suitable for a blog post thumbnail.
 
         Blog Title: {title}
         Blog Content: {content}
@@ -153,9 +155,41 @@ def generate_thumbnail_description(client_obj, title, content):
             ]
         )
         
-        return completion.choices[0].message.content.strip()
+        image_description = completion.choices[0].message.content.strip()
+        
+        # Generate image using DALL-E
+        response = openai_client.images.generate(
+            model="dall-e-3",
+            prompt=image_description,
+            size="1024x1024",
+            quality="standard",
+            n=1,
+        )
+
+        image_url = response.data[0].url
+        
+        # Download the image
+        image_response = requests.get(image_url)
+        image_response.raise_for_status()
+        
+        # Generate a unique filename
+        filename = f"thumbnails/{client_obj.id}/{timezone.now().strftime('%Y%m%d_%H%M%S')}.png"
+        
+        # Upload to S3
+        import boto3
+        s3 = boto3.client('s3')
+        s3.put_object(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            Key=filename,
+            Body=image_response.content,
+            ContentType='image/png'
+        )
+        
+        # Return the S3 URL
+        return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
+        
     except Exception as e:
-        logger.error(f"Error generating thumbnail description: {str(e)}")
+        logger.error(f"Error generating thumbnail: {str(e)}")
         return None
 
 def generate_blog_posts_sync(client_id=None):
@@ -212,15 +246,15 @@ def generate_blog_posts_sync(client_id=None):
             title = full_content.split('\n')[0].replace('Title: ', '')
             content = '\n'.join(full_content.split('\n')[1:]).strip()
             
-            # Generate thumbnail description
-            thumbnail = generate_thumbnail_description(client_obj, title, content)
+            # Generate thumbnail image
+            thumbnail_url = generate_thumbnail(client_obj, title, content)
             
             # Create blog post
             blog_post = BlogPost.objects.create(
                 client=client_obj,
                 title=title,
                 content=content,
-                thumbnail=thumbnail,
+                thumbnail=thumbnail_url,
                 status='published',
                 published_at=timezone.now(),
                 related_event=relevant_event if relevant_event else None

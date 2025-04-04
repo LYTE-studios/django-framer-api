@@ -108,7 +108,7 @@ class BlogPost(models.Model):
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='blog_posts', null=True, blank=True)
     title = models.CharField(max_length=200)
     content = models.TextField()
-    thumbnail = models.TextField(blank=True, null=True, help_text="Generated thumbnail description for image generation")
+    thumbnail = models.TextField(blank=True, null=True, help_text="URL or description for the thumbnail image")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='draft')
     error_message = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
