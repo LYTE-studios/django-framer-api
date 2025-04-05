@@ -28,13 +28,22 @@ wait_for_redis
 echo "Applying database migrations..."
 
 # First, migrate auth and contenttypes
+echo "Migrating auth and contenttypes..."
 python manage.py migrate auth
 python manage.py migrate contenttypes
 
-# Then migrate the blogs app
+# Then migrate the blogs app migrations one by one
 echo "Migrating blogs app..."
-python manage.py migrate blogs zero --fake
-python manage.py migrate blogs --fake-initial
+for i in $(seq 1 10); do
+    num=$(printf "%04d" $i)
+    echo "Applying blogs migration $num..."
+    python manage.py migrate blogs $num --fake-initial
+done
+
+# Apply the new split migrations
+echo "Applying new migrations..."
+python manage.py migrate blogs 0011_client_embed_token_client_user --fake-initial
+python manage.py migrate blogs 0012_subscription --fake-initial
 
 # Finally, migrate any remaining apps
 echo "Applying remaining migrations..."

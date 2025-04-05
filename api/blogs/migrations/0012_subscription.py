@@ -8,21 +8,11 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('blogs', '0010_alter_blogpost_thumbnail'),
+        ('blogs', '0011_client_embed_token_client_user'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='client',
-            name='embed_token',
-            field=models.CharField(blank=True, help_text='Unique token for embedding blogs', max_length=100, null=True, unique=True),
-        ),
-        migrations.AddField(
-            model_name='client',
-            name='user',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='client', to=settings.AUTH_USER_MODEL),
-        ),
         migrations.CreateModel(
             name='Subscription',
             fields=[
