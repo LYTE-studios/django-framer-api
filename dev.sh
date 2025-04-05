@@ -83,7 +83,6 @@ is_running() {
 generate_requirements() {
     echo "Generating requirements.txt..."
     
-    # Ensure we're in the right directory
     # Check if we're in the right directory structure
     if [ ! -d "api" ]; then
         echo "Error: 'api' directory not found"
