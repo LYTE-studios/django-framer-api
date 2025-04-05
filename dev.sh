@@ -81,31 +81,39 @@ is_running() {
 
 # Function to generate requirements
 generate_requirements() {
-    echo "Generating requirements.txt from Pipfile..."
-    cd api || exit 1
+    echo "Generating requirements.txt..."
     
     # Ensure we're in the right directory
-    if [ ! -f "Pipfile" ]; then
-        echo "Error: Pipfile not found in api directory"
+    # Check if we're in the right directory structure
+    if [ ! -d "api" ]; then
+        echo "Error: 'api' directory not found"
+        echo "Please run this script from the project root directory"
         exit 1
     fi
     
-    # Generate requirements
-    if [ -f "generate_requirements.sh" ]; then
-        chmod +x generate_requirements.sh
-        ./generate_requirements.sh
-    else
-        echo "generate_requirements.sh not found!"
+    # Navigate to api directory and generate requirements
+    cd api || exit 1
+    
+    # Make generate_requirements.sh executable
+    chmod +x generate_requirements.sh
+    
+    # Run the script
+    if ! ./generate_requirements.sh; then
+        echo "Error: Failed to generate requirements.txt"
+        cd ..
         exit 1
     fi
     
-    # Verify requirements.txt was created
-    if [ ! -f "requirements.txt" ]; then
+    # Return to original directory
+    cd ..
+    
+    # Verify requirements.txt exists
+    if [ ! -f "api/requirements.txt" ]; then
         echo "Error: requirements.txt was not generated"
         exit 1
     fi
     
-    cd ..
+    echo "Requirements generated successfully"
 }
 
 # Function to clean up Docker resources
