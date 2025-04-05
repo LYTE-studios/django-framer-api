@@ -26,21 +26,20 @@ wait_for_redis
 
 # Apply database migrations
 echo "Applying database migrations..."
+
 # First, migrate auth and contenttypes
 python manage.py migrate auth
 python manage.py migrate contenttypes
 
-# Then migrate the blogs app migrations in order
+# Then migrate the blogs app
 echo "Migrating blogs app..."
-for i in $(seq 1 11); do
-    migration_number=$(printf "%04d" $i)
-    echo "Applying migration blogs.$migration_number..."
-    python manage.py migrate blogs $migration_number --fake-initial
-done
+python manage.py migrate blogs zero --fake
+python manage.py migrate blogs --fake-initial
 
 # Finally, migrate any remaining apps
 echo "Applying remaining migrations..."
 python manage.py migrate --fake blogs
+python manage.py migrate
 
 # Collect static files
 echo "Collecting static files..."

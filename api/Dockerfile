@@ -25,17 +25,20 @@ RUN pip install --no-cache-dir -r requirements.txt \
         watchdog[watchmedo] \
         stripe \
         whitenoise \
-        psycopg2-binary
+        psycopg2-binary \
+        python-dotenv
+
+# Copy entrypoint script first and make it executable
+COPY entrypoint.sh .
+RUN chmod +x /app/entrypoint.sh
 
 # Copy project
 COPY . /app/
 
-# Create directories
+# Create directories and set permissions
 RUN mkdir -p /app/staticfiles /app/media \
-    && chmod -R 755 /app/staticfiles /app/media
-
-# Make entrypoint executable
-RUN chmod +x /app/entrypoint.sh
+    && chmod -R 755 /app/staticfiles /app/media \
+    && chmod +x /app/entrypoint.sh
 
 # Run entrypoint.sh
 ENTRYPOINT ["/app/entrypoint.sh"]
