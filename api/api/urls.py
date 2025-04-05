@@ -11,13 +11,11 @@ from django.views.generic import RedirectView
 urlpatterns = [
     # Redirect root to client portal
     path('', RedirectView.as_view(url='/client/', permanent=True)),
-    
-    # Include all blogs URLs (client portal, API, and admin portal)
-    path('', include('blogs.urls')),
+
+    path('client/', include('blogs.urls.client')),
+
+    path('api/', include('blogs.urls.api')),
     
     # Django admin
     path('api/admin/', admin.site.urls),
-    
-    # DRF authentication
-    path('api/auth/', include('rest_framework.urls')),
 ]
