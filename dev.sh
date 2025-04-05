@@ -82,7 +82,15 @@ is_running() {
 # Function to generate requirements
 generate_requirements() {
     echo "Generating requirements.txt from Pipfile..."
-    cd api
+    cd api || exit 1
+    
+    # Ensure we're in the right directory
+    if [ ! -f "Pipfile" ]; then
+        echo "Error: Pipfile not found in api directory"
+        exit 1
+    fi
+    
+    # Generate requirements
     if [ -f "generate_requirements.sh" ]; then
         chmod +x generate_requirements.sh
         ./generate_requirements.sh
@@ -90,6 +98,13 @@ generate_requirements() {
         echo "generate_requirements.sh not found!"
         exit 1
     fi
+    
+    # Verify requirements.txt was created
+    if [ ! -f "requirements.txt" ]; then
+        echo "Error: requirements.txt was not generated"
+        exit 1
+    fi
+    
     cd ..
 }
 
