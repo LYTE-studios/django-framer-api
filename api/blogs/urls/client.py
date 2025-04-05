@@ -7,6 +7,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
 # Blog Posts
+    path ('', ClientDashboardView.as_view(), name='dashboard'),
     path('posts/', ClientBlogPostsView.as_view(), name='posts'),
     path('posts/new/', ClientBlogPostsView.as_view(), name='new-post'),
     path('posts/<int:pk>/', ClientBlogPostsView.as_view(), name='edit-post'),
