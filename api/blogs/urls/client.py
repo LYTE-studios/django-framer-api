@@ -32,8 +32,4 @@ urlpatterns = [
     path('subscription/billing/', ClientSubscriptionView.as_view(), name='billing'),
     path('subscription/invoices/', ClientSubscriptionView.as_view(), name='invoices'),
     
-    # Help and Documentation
-    path('docs/', TemplateView.as_view(
-        template_name='client/documentation.html'
-    ), name='docs'),
 ]
