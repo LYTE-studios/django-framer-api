@@ -16,6 +16,7 @@ gunicorn = "*"
 psycopg2-binary = "*"
 requests = "*"
 boto3 = "*"
+stripe = "*"
 
 [dev-packages]
 

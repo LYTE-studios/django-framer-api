@@ -13,7 +13,10 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-buck63hy3bs$gk!n=p^sbqc*qv7kz7uh%$ltu+eg!93o)bff4s')
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    # Fallback secret key for development
+    SECRET_KEY = 'django-insecure-dev-key-do-not-use-in-production'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
@@ -55,14 +58,10 @@ CSRF_TRUSTED_ORIGINS = [
     'https://framer-api.lytestudios.be',
 ]
 
-# If you're using CORS, also add:
-CORS_ALLOWED_ORIGINS = [
-    'https://framer-api.lytestudios.be',
-]
-
+# CORS settings
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # REST Framework settings
 REST_FRAMEWORK = {
@@ -97,6 +96,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'api.wsgi.application'
 
+# Database
 from .my_secrets import database
 
 DATABASES = {
@@ -106,6 +106,7 @@ DATABASES = {
     }
 }
 
+# Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -135,8 +136,8 @@ MEDIA_URL = '/media/'
 
 # Use S3 in production, local storage in development
 if not DEBUG:
-    AWS_STORAGE_BUCKET_NAME = "jobr-api"
-    AWS_S3_REGION_NAME = "eu-central-1"
+    AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', 'eu-central-1')
     AWS_S3_FILE_OVERWRITE = False
     AWS_S3_VERIFY = True
     AWS_S3_ADDRESSING_STYLE = "virtual"
@@ -151,8 +152,6 @@ if not DEBUG:
 else:
     # Use WhiteNoise for static files in development
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-ALLOWED_HOSTS = ["*"]
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
