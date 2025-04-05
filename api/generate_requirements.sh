@@ -3,26 +3,26 @@
 # Exit on error
 set -e
 
-echo "Checking Python installation..."
-if ! command -v python3 &> /dev/null; then
+# Find Python3 path
+PYTHON_PATH=$(which python3)
+if [ -z "$PYTHON_PATH" ]; then
     echo "Python3 not found. Please install Python3 first."
     exit 1
 fi
 
+echo "Using Python at: $PYTHON_PATH"
+
+# Ensure pip is installed and get its version
 echo "Installing/upgrading pip..."
-python3 -m ensurepip --upgrade || {
-    echo "Failed to install pip. Please install pip manually."
-    exit 1
-}
+$PYTHON_PATH -m ensurepip --upgrade
+$PYTHON_PATH -m pip install --upgrade pip
 
 echo "Installing pipenv..."
-python3 -m pip install --user pipenv || {
-    echo "Failed to install pipenv. Please check your Python installation."
-    exit 1
-}
+$PYTHON_PATH -m pip install --user pipenv
 
 echo "Generating requirements.txt from Pipfile..."
-python3 -m pipenv requirements > requirements.txt || {
+export PYTHONPATH="/usr/local/lib/python3.11/site-packages:$PYTHONPATH"
+$PYTHON_PATH -m pipenv requirements > requirements.txt || {
     echo "Failed to generate requirements.txt. Please check your Pipfile."
     exit 1
 }

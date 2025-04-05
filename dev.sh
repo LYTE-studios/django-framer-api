@@ -37,52 +37,77 @@ install_dependencies() {
     # Install Python and pip if not installed
     if ! command -v python3 &> /dev/null; then
         echo "Installing Python..."
-        apt-get install -y python3 python3-pip
+        apt-get install -y python3 python3-pip python3-venv
     fi
 
     # Install Docker if not installed
     if ! command -v docker &> /dev/null; then
         echo "Installing Docker..."
-        apt-get install -y docker.io
+        apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+        add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        apt-get update
+        apt-get install -y docker-ce
     fi
 
     # Install Docker Compose if not installed
     if ! command -v docker-compose &> /dev/null; then
         echo "Installing Docker Compose..."
-        apt-get install -y docker-compose
+        curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
     fi
 
     # Start Docker service
     systemctl start docker
     systemctl enable docker
 
+    # Add current user to docker group
+    usermod -aG docker $SUDO_USER
+
     echo "All dependencies installed successfully!"
+    echo "Please log out and back in for group changes to take effect."
 }
 
 # Function to check if containers are running
 is_running() {
-    docker-compose -f docker-compose.dev.yaml ps --services --filter "status=running" | grep -q "web"
+    if command -v docker-compose &> /dev/null; then
+        docker-compose -f docker-compose.dev.yaml ps --services --filter "status=running" | grep -q "web"
+    else
+        echo "docker-compose not found"
+        return 1
+    fi
 }
 
 # Function to generate requirements
 generate_requirements() {
     echo "Generating requirements.txt from Pipfile..."
-    cd api && python3 -m pip install pipenv
-    python3 -m pipenv requirements > requirements.txt
+    cd api
+    if [ -f "generate_requirements.sh" ]; then
+        chmod +x generate_requirements.sh
+        ./generate_requirements.sh
+    else
+        echo "generate_requirements.sh not found!"
+        exit 1
+    fi
     cd ..
 }
 
 # Function to clean up Docker resources
 cleanup_docker() {
     echo "Cleaning up Docker resources..."
-    docker system prune -f
-    echo "Cleanup complete!"
+    if command -v docker &> /dev/null; then
+        docker system prune -f
+        echo "Cleanup complete!"
+    else
+        echo "Docker not found"
+        exit 1
+    fi
 }
 
-# Check if docker-compose exists
+# Check for docker-compose
 check_docker_compose() {
     if ! command -v docker-compose &> /dev/null; then
-        echo "docker-compose not found. Please run './dev.sh setup' first"
+        echo "docker-compose not found. Please run 'sudo ./dev.sh setup' first"
         exit 1
     fi
 }
