@@ -1,13 +1,7 @@
 #!/bin/sh
 
-# Exit on error and print commands
+# Exit on error
 set -e
-set -x
-
-echo "Current directory: $(pwd)"
-echo "Current user: $(whoami)"
-echo "Directory contents:"
-ls -la
 
 # Find Python3 path
 if ! command -v python3 > /dev/null 2>&1; then
@@ -34,6 +28,8 @@ requests==2.31.0
 boto3==1.34.14
 stripe==7.10.0
 watchdog[watchmedo]==3.0.0
+psycopg2-binary==2.9.9
+whitenoise==6.6.0
 EOL
 
 # Check if requirements.txt was created
