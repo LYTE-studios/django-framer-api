@@ -6,11 +6,22 @@ The `urlpatterns` list routes URLs to views. For more information please see:
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken import views as auth_views
+from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('blogs.urls')),
-    path('api-auth/', include('rest_framework.urls')),
-    path('api-token-auth/', auth_views.obtain_auth_token),
+    # Redirect root to client portal
+    path('', RedirectView.as_view(url='/client/', permanent=True)),
+    
+    # Client portal routes
+    path('client/', include('blogs.urls.client')),
+    
+    # API routes
+    path('api/', include('blogs.urls.api')),
+    
+    # Admin routes (both Django admin and custom admin)
+    path('api/admin/', admin.site.urls),
+    path('api/admin/portal/', include('blogs.urls.admin')),
+    
+    # Authentication routes
+    path('api/auth/', include('rest_framework.urls')),
 ]
