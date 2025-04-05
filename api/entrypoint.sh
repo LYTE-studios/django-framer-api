@@ -21,18 +21,8 @@ if ! command -v gunicorn > /dev/null 2>&1; then
     pip install gunicorn
 fi
 
-# Create necessary directories
-echo "Creating static and media directories..."
-mkdir -p /app/staticfiles
-mkdir -p /app/media
-chmod -R 755 /app/staticfiles /app/media
-
 # Wait for Redis
 wait_for_redis
-
-# Collect static files
-echo "Collecting static files..."
-python manage.py collectstatic --noinput --clear
 
 # Create cache table
 echo "Creating cache table..."
