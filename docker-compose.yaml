@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   web:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     command: gunicorn --bind 0.0.0.0:8000 api.wsgi:application
     volumes:
       - ./api:/app
@@ -13,8 +15,8 @@ services:
     env_file:
       - .env
     environment:
-      - DJANGO_DEBUG=True
-      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+      - DJANGO_DEBUG=False
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -23,14 +25,16 @@ services:
       - redis
 
   celery_worker:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     command: celery -A api worker --loglevel=info
     volumes:
       - ./api:/app
     env_file:
       - .env
     environment:
-      - DJANGO_DEBUG=True
+      - DJANGO_DEBUG=False
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
@@ -39,14 +43,16 @@ services:
       - redis
 
   celery_beat:
-    build: ./api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     command: celery -A api beat --loglevel=info
     volumes:
       - ./api:/app
     env_file:
       - .env
     environment:
-      - DJANGO_DEBUG=True
+      - DJANGO_DEBUG=False
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}

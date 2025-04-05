@@ -15,13 +15,15 @@ RUN apt-get update \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy only requirements first to leverage Docker cache
+COPY ./requirements.txt /app/requirements.txt
+
 # Install Python dependencies
-COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     && pip install watchdog[watchmedo]  # Add watchdog for development reloading
 
 # Copy project
-COPY . .
+COPY . /app/
 
 # Create directories
 RUN mkdir -p /app/staticfiles /app/media
