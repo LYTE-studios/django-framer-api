@@ -17,10 +17,16 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 @shared_task
-def check_ai_score(blog_post_id):
+def check_ai_score(blog_post_id, attempt=1, best_score=float('inf'), best_content=None):
     """
     Check the AI score of a blog post using ZeroGPT API
     Returns a score from 0-100 where lower scores indicate more human-like text
+    
+    Parameters:
+    - blog_post_id: ID of the blog post to check
+    - attempt: Current attempt number (max 3)
+    - best_score: Best AI score achieved so far
+    - best_content: Content that achieved the best score
     """
     try:
         blog_post = BlogPost.objects.get(id=blog_post_id)
@@ -71,14 +77,21 @@ def check_ai_score(blog_post_id):
                 blog_post.save()
                 logger.info(f"Updated AI score for blog post {blog_post_id}: {ai_score}")
                 
-                # If AI score is too high, request a more human-like rewrite
-                if ai_score > 25:
-                    logger.info(f"AI score {ai_score} is too high, requesting rewrite")
+                # Track the best version
+                current_content = blog_post.content
+                if ai_score < best_score:
+                    best_score = ai_score
+                    best_content = current_content
+
+                # If AI score is too high and we haven't exceeded max attempts, try rewriting
+                if ai_score > 25 and attempt < 3:
+                    logger.info(f"AI score {ai_score} is too high (attempt {attempt}/3), requesting rewrite")
                     
                     # Modify the system message to request a more natural rewrite
                     client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
                     rewrite_prompt = f"""Please rewrite this blog post to make it more natural and human-like while maintaining professionalism.
                     Current AI detection score: {ai_score}%
+                    Attempt: {attempt}/3
                     
                     Original post:
                     Title: {blog_post.title}
@@ -107,8 +120,14 @@ def check_ai_score(blog_post_id):
                     blog_post.content = rewritten_content
                     blog_post.save()
                     
-                    # Check AI score again
-                    check_ai_score(blog_post.id)
+                    # Check AI score again with incremented attempt counter
+                    check_ai_score(blog_post.id, attempt + 1, best_score, best_content)
+                elif attempt > 1:  # If we've done multiple attempts, use the best version
+                    if best_content and best_score < ai_score:
+                        logger.info(f"Using best version with score {best_score} after {attempt} attempts")
+                        blog_post.content = best_content
+                        blog_post.ai_score = best_score
+                        blog_post.save()
             except (ValueError, TypeError):
                 logger.error(f"Invalid AI score value received: {ai_score}")
         else:
