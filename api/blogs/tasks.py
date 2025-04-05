@@ -9,6 +9,7 @@ import logging
 import os
 import requests
 from dotenv import load_dotenv
+import time
 
 # Load environment variables
 load_dotenv()
@@ -69,6 +70,45 @@ def check_ai_score(blog_post_id):
                 blog_post.ai_score = ai_score
                 blog_post.save()
                 logger.info(f"Updated AI score for blog post {blog_post_id}: {ai_score}")
+                
+                # If AI score is too high, request a more human-like rewrite
+                if ai_score > 25:
+                    logger.info(f"AI score {ai_score} is too high, requesting rewrite")
+                    
+                    # Modify the system message to request a more natural rewrite
+                    client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
+                    rewrite_prompt = f"""Please rewrite this blog post to make it more natural and human-like while maintaining professionalism.
+                    Current AI detection score: {ai_score}%
+                    
+                    Original post:
+                    Title: {blog_post.title}
+                    {blog_post.content}
+                    
+                    Keep the same core message and information, but rewrite it with:
+                    - More natural flow and transitions
+                    - Varied sentence structures
+                    - Relatable examples or analogies where appropriate
+                    - A warm, knowledgeable voice that builds trust
+                    
+                    Maintain professionalism and credibility while making the content more engaging."""
+                    
+                    completion = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[
+                            {"role": "system", "content": "You are an expert content writer who specializes in creating authentic, professional blog content."},
+                            {"role": "user", "content": rewrite_prompt}
+                        ]
+                    )
+                    
+                    # Extract rewritten content
+                    rewritten_content = completion.choices[0].message.content.strip()
+                    
+                    # Update the blog post
+                    blog_post.content = rewritten_content
+                    blog_post.save()
+                    
+                    # Check AI score again
+                    check_ai_score(blog_post.id)
             except (ValueError, TypeError):
                 logger.error(f"Invalid AI score value received: {ai_score}")
         else:
@@ -134,13 +174,24 @@ def generate_thumbnail(client_obj, title, content):
     Generate a thumbnail image using DALL-E based on the blog post content
     Returns the URL of the generated image stored in S3
     """
+    max_retries = 3
+    retry_delay = 2  # seconds
+
     try:
         openai_client = OpenAI(api_key=os.getenv('OPENAI_API_KEY') or settings.OPENAI_API_KEY)
         
         # First, generate a description for the image
-        prompt = f"""Based on this blog post title and content, generate a SIMPLE description for a thumbnail image.
-        The description should be brief (1-2 sentences) and focus on key visual elements that represent the post's main topic.
-        Keep it minimalistic and easy to visualize. The image should be suitable for a blog post thumbnail.
+        prompt = f"""Create a professional blog thumbnail image that captures the essence of this post.
+
+        Requirements:
+        - Create a minimalist, modern composition
+        - Use a clean, professional style
+        - Include one clear focal point
+        - Use soft, professional lighting
+        - Maintain ample negative space
+        - Avoid text or complex details
+        - Ensure it works at small sizes
+        - Use a professional color palette
 
         Blog Title: {title}
         Blog Content: {content}
@@ -148,48 +199,85 @@ def generate_thumbnail(client_obj, title, content):
         Respond with ONLY the image description, nothing else."""
 
         completion = openai_client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4",  # Using GPT-4 for better image descriptions
             messages=[
-                {"role": "system", "content": "You are a visual designer creating simple, minimalistic thumbnail descriptions."},
+                {"role": "system", "content": "You are an expert visual designer specializing in creating professional blog thumbnails."},
                 {"role": "user", "content": prompt}
             ]
         )
         
         image_description = completion.choices[0].message.content.strip()
-        
-        # Generate image using DALL-E
-        response = openai_client.images.generate(
-            model="dall-e-3",
-            prompt=image_description,
-            size="1024x1024",
-            quality="standard",
-            n=1,
-        )
+        logger.info(f"Generated image description: {image_description}")
 
-        image_url = response.data[0].url
-        
-        # Download the image
-        image_response = requests.get(image_url)
+        # Generate image using DALL-E with retries
+        for attempt in range(max_retries):
+            try:
+                response = openai_client.images.generate(
+                    model="dall-e-3",
+                    prompt=image_description,
+                    size="1024x1024",
+                    quality="standard",
+                    n=1,
+                )
+                image_url = response.data[0].url
+                break
+            except Exception as e:
+                if attempt == max_retries - 1:
+                    raise
+                logger.warning(f"DALL-E generation attempt {attempt + 1} failed: {str(e)}")
+                time.sleep(retry_delay)
+
+        # Download the image with retries
+        session = requests.Session()
+        session.mount('https://', requests.adapters.HTTPAdapter(max_retries=3))
+        image_response = session.get(image_url, timeout=30)
         image_response.raise_for_status()
+
+        # Verify image content
+        if not image_response.content or len(image_response.content) < 1000:
+            raise ValueError("Downloaded image appears to be invalid or empty")
+
+        # Generate a unique filename with client subfolder
+        client_folder = f"thumbnails/{client_obj.id}"
+        filename = f"{client_folder}/{timezone.now().strftime('%Y%m%d_%H%M%S')}.png"
         
-        # Generate a unique filename
-        filename = f"thumbnails/{client_obj.id}/{timezone.now().strftime('%Y%m%d_%H%M%S')}.png"
-        
-        # Upload to S3
-        import boto3
-        s3 = boto3.client('s3')
-        s3.put_object(
-            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
-            Key=filename,
-            Body=image_response.content,
-            ContentType='image/png'
-        )
-        
-        # Return the S3 URL
-        return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
-        
+        try:
+            # Upload to S3
+            import boto3
+            s3 = boto3.client('s3')
+            
+            # Ensure the client folder exists
+            s3.put_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=f"{client_folder}/",
+                Body=''
+            )
+            
+            # Upload the image
+            s3.put_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=filename,
+                Body=image_response.content,
+                ContentType='image/png',
+                ACL='public-read'  # Make the image publicly accessible
+            )
+            
+            # Verify the upload
+            s3.head_object(
+                Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+                Key=filename
+            )
+            
+            # Return the S3 URL
+            return f"https://{settings.AWS_S3_CUSTOM_DOMAIN}/{filename}"
+            
+        except Exception as e:
+            logger.error(f"S3 upload error: {str(e)}")
+            raise
+            
     except Exception as e:
         logger.error(f"Error generating thumbnail: {str(e)}")
+        logger.exception(e)  # Log full traceback
         return None
 
 def generate_blog_posts_sync(client_id=None):
@@ -230,7 +318,7 @@ def generate_blog_posts_sync(client_id=None):
             if avoid_subjects:
                 system_message += f"\nPlease avoid these recently covered subjects: {', '.join(avoid_subjects)}"
             
-            system_message += "\nPlease generate this text with a professional tone, but integrate slight imperfections and natural human nuances such as subtle colloquialisms appropriate for professional contexts and minor grammatical quirks to enhance authenticity. Keep it in touch with the tone of voice that we've provided you with."
+            system_message += "\nPlease write this blog post in a natural, professional style that feels authentic and engaging. Use varied sentence structures, occasional conversational transitions, and industry-appropriate analogies to make the content more relatable while maintaining credibility. Aim for a warm, knowledgeable voice that builds trust with readers. Keep it aligned with the provided tone of voice examples."
 
             # Generate blog post using ChatGPT
             completion = client.chat.completions.create(

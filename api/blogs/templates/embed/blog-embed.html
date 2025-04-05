@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LYTE Blog Embed Example</title>
+    <script src="blog-embed.js" type="module"></script>
+</head>
+<body>
+    <!-- Example usage with light theme -->
+    <h2>Light Theme Blog Posts</h2>
+    <lyte-blog 
+        client-id="1" 
+        theme="light" 
+        posts-per-page="3">
+        <!-- Optional: Add fallback content for SEO -->
+        <noscript>
+            Please enable JavaScript to view our blog posts or visit our website directly.
+        </noscript>
+    </lyte-blog>
+
+    <!-- Example usage with dark theme -->
+    <h2>Dark Theme Blog Posts</h2>
+    <lyte-blog 
+        client-id="1" 
+        theme="dark" 
+        posts-per-page="3">
+        <noscript>
+            Please enable JavaScript to view our blog posts or visit our website directly.
+        </noscript>
+    </lyte-blog>
+
+    <!-- Usage Instructions -->
+    <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5;">
+        <h3>How to Use LYTE Blog Embed</h3>
+        <pre><code>
+<!-- Add the script to your page -->
+&lt;script src="https://your-domain.com/path/to/blog-embed.js" type="module">&lt;/script>
+
+<!-- Add the custom element where you want the blog posts to appear -->
+&lt;lyte-blog 
+    client-id="YOUR_CLIENT_ID" 
+    theme="light|dark" 
+    posts-per-page="10">
+    &lt;noscript>
+        Please enable JavaScript to view our blog posts.
+    &lt;/noscript>
+&lt;/lyte-blog>
+        </code></pre>
+        
+        <h4>Attributes:</h4>
+        <ul>
+            <li><strong>client-id</strong>: Your LYTE client ID (required)</li>
+            <li><strong>theme</strong>: "light" or "dark" (optional, defaults to "light")</li>
+            <li><strong>posts-per-page</strong>: Number of posts to display (optional, defaults to 10)</li>
+        </ul>
+    </div>
+</body>
+</html>
