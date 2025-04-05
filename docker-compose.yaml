@@ -23,6 +23,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - redis
+    restart: always
 
   celery_worker:
     build:
@@ -41,6 +42,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - redis
+    restart: always
 
   celery_beat:
     build:
@@ -59,6 +61,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
     depends_on:
       - redis
+    restart: always
 
   redis:
     image: redis:alpine
@@ -67,6 +70,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: always
 
 volumes:
   static_volume:
