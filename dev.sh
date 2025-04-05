@@ -7,15 +7,13 @@ show_help() {
     echo "Usage: ./dev.sh [command]"
     echo
     echo "Commands:"
-    echo "  up        Start development environment"
-    echo "  down      Stop development environment"
-    echo "  restart   Restart development environment"
+    echo "  up        Start the environment"
+    echo "  down      Stop the environment"
+    echo "  restart   Restart the environment"
     echo "  logs      Show logs from all services"
     echo "  build     Rebuild all services"
-    echo "  prod      Start production environment"
     echo "  shell     Open a shell in the web container"
     echo "  test      Run tests"
-    echo "  reqs      Update requirements.txt from Pipfile"
     echo "  clean     Clean up unused Docker resources"
     echo "  setup     Install required system dependencies"
     echo "  help      Show this help message"
@@ -79,63 +77,6 @@ is_running() {
     fi
 }
 
-# Function to generate requirements
-generate_requirements() {
-    echo "Starting requirements generation..."
-    echo "Current directory: $(pwd)"
-    
-    # Check if we're in the right directory structure
-    if [ ! -d "api" ]; then
-        echo "Error: 'api' directory not found"
-        echo "Please run this script from the project root directory"
-        exit 1
-    fi
-    
-    # Navigate to api directory
-    cd api || exit 1
-    echo "Changed to api directory: $(pwd)"
-    
-    # Make generate_requirements.sh executable and check its existence
-    if [ ! -f "generate_requirements.sh" ]; then
-        echo "Error: generate_requirements.sh not found in $(pwd)"
-        cd ..
-        exit 1
-    fi
-    
-    echo "Making generate_requirements.sh executable..."
-    chmod +x generate_requirements.sh
-    
-    # Run the script
-    echo "Running generate_requirements.sh..."
-    if ! ./generate_requirements.sh; then
-        echo "Error: Failed to generate requirements.txt"
-        cd ..
-        exit 1
-    fi
-    
-    # Return to original directory
-    cd ..
-}
-
-# Function to wait for services
-wait_for_services() {
-    echo "Waiting for services to be ready..."
-    
-    # Wait for up to 30 seconds
-    for i in $(seq 1 30); do
-        if docker-compose ps | grep -q "running"; then
-            echo "Services are ready!"
-            return 0
-        fi
-        echo "Waiting... ($i/30)"
-        sleep 1
-    done
-    
-    echo "Error: Services failed to start within 30 seconds"
-    docker-compose logs
-    return 1
-}
-
 # Function to clean up Docker resources
 cleanup_docker() {
     echo "Cleaning up Docker resources..."
@@ -164,15 +105,9 @@ case "$1" in
     up)
         check_docker_compose
         echo "Starting environment..."
-        generate_requirements
         docker-compose up -d
-        if wait_for_services; then
-            echo "Environment is ready!"
-            echo "Access the application at http://localhost:8000"
-        else
-            echo "Failed to start services. Check the logs above for details."
-            exit 1
-        fi
+        echo "Environment is starting..."
+        echo "Access the application at http://localhost:8000"
         ;;
     down)
         check_docker_compose
@@ -182,15 +117,8 @@ case "$1" in
     restart)
         check_docker_compose
         echo "Restarting environment..."
-        docker-compose down
-        generate_requirements
-        docker-compose up -d
-        if wait_for_services; then
-            echo "Environment restarted successfully!"
-        else
-            echo "Failed to restart services. Check the logs above for details."
-            exit 1
-        fi
+        docker-compose restart
+        echo "Environment is restarting..."
         ;;
     logs)
         check_docker_compose
@@ -199,20 +127,7 @@ case "$1" in
     build)
         check_docker_compose
         echo "Rebuilding services..."
-        generate_requirements
         docker-compose build --no-cache
-        ;;
-    prod)
-        check_docker_compose
-        echo "Starting production environment..."
-        generate_requirements
-        docker-compose up -d
-        if wait_for_services; then
-            echo "Production environment is ready!"
-        else
-            echo "Failed to start services. Check the logs above for details."
-            exit 1
-        fi
         ;;
     shell)
         check_docker_compose
@@ -229,9 +144,6 @@ case "$1" in
         else
             echo "Environment is not running. Start it with './dev.sh up'"
         fi
-        ;;
-    reqs)
-        generate_requirements
         ;;
     clean)
         check_docker_compose
