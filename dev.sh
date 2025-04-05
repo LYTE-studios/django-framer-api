@@ -81,7 +81,9 @@ is_running() {
 
 # Function to generate requirements
 generate_requirements() {
-    echo "Generating requirements.txt..."
+    echo "Starting requirements generation..."
+    echo "Current directory: $(pwd)"
+    echo "Current user: $(whoami)"
     
     # Check if we're in the right directory structure
     if [ ! -d "api" ]; then
@@ -90,13 +92,22 @@ generate_requirements() {
         exit 1
     fi
     
-    # Navigate to api directory and generate requirements
+    # Navigate to api directory
     cd api || exit 1
+    echo "Changed to api directory: $(pwd)"
     
-    # Make generate_requirements.sh executable
+    # Make generate_requirements.sh executable and check its existence
+    if [ ! -f "generate_requirements.sh" ]; then
+        echo "Error: generate_requirements.sh not found in $(pwd)"
+        cd ..
+        exit 1
+    fi
+    
+    echo "Making generate_requirements.sh executable..."
     chmod +x generate_requirements.sh
     
     # Run the script
+    echo "Running generate_requirements.sh..."
     if ! ./generate_requirements.sh; then
         echo "Error: Failed to generate requirements.txt"
         cd ..
@@ -106,13 +117,20 @@ generate_requirements() {
     # Return to original directory
     cd ..
     
-    # Verify requirements.txt exists
+    # Verify requirements.txt exists and has content
     if [ ! -f "api/requirements.txt" ]; then
         echo "Error: requirements.txt was not generated"
         exit 1
     fi
     
-    echo "Requirements generated successfully"
+    if [ ! -s "api/requirements.txt" ]; then
+        echo "Error: requirements.txt is empty"
+        exit 1
+    fi
+    
+    echo "Requirements generated successfully at api/requirements.txt"
+    echo "File contents:"
+    cat api/requirements.txt
 }
 
 # Function to clean up Docker resources
