@@ -15,6 +15,12 @@ wait_for_redis() {
 # Install netcat for service checking
 apt-get update && apt-get install -y netcat-openbsd
 
+# Ensure gunicorn is installed
+if ! command -v gunicorn > /dev/null 2>&1; then
+    echo "Installing gunicorn..."
+    pip install gunicorn
+fi
+
 # Create necessary directories
 echo "Creating static and media directories..."
 mkdir -p /app/staticfiles
@@ -60,4 +66,5 @@ python manage.py createcachetable
 
 # Execute the command passed to docker
 echo "Starting service..."
+echo "Running command: $@"
 exec "$@"

@@ -26,7 +26,8 @@ RUN pip install --no-cache-dir -r requirements.txt \
         stripe \
         whitenoise \
         psycopg2-binary \
-        python-dotenv
+        python-dotenv \
+        gunicorn
 
 # Copy entrypoint script first and make it executable
 COPY entrypoint.sh .
