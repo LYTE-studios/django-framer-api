@@ -13,20 +13,26 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         build-essential \
         libpq-dev \
+        netcat-openbsd \
+        curl \
+        git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy only requirements first to leverage Docker cache
-COPY ./requirements.txt /app/requirements.txt
-
 # Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install watchdog[watchmedo]  # Add watchdog for development reloading
+    && pip install --no-cache-dir \
+        watchdog[watchmedo] \
+        stripe \
+        whitenoise \
+        psycopg2-binary
 
 # Copy project
 COPY . /app/
 
 # Create directories
-RUN mkdir -p /app/staticfiles /app/media
+RUN mkdir -p /app/staticfiles /app/media \
+    && chmod -R 755 /app/staticfiles /app/media
 
 # Make entrypoint executable
 RUN chmod +x /app/entrypoint.sh

@@ -26,11 +26,21 @@ wait_for_redis
 
 # Apply database migrations
 echo "Applying database migrations..."
-# Fake the problematic migration
-python manage.py migrate blogs 0010_alter_blogpost_thumbnail
-python manage.py migrate blogs 0011_client_embed_token_client_user_subscription --fake
-# Run any remaining migrations
-python manage.py migrate
+# First, migrate auth and contenttypes
+python manage.py migrate auth
+python manage.py migrate contenttypes
+
+# Then migrate the blogs app migrations in order
+echo "Migrating blogs app..."
+for i in $(seq 1 11); do
+    migration_number=$(printf "%04d" $i)
+    echo "Applying migration blogs.$migration_number..."
+    python manage.py migrate blogs $migration_number --fake-initial
+done
+
+# Finally, migrate any remaining apps
+echo "Applying remaining migrations..."
+python manage.py migrate --fake blogs
 
 # Collect static files
 echo "Collecting static files..."
