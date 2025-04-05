@@ -4,7 +4,6 @@ from api.blogs.views.client import *
 from api.blogs.views.auth import *
 from api.blogs.forms import EmailAuthenticationForm
 from django.contrib.auth import views as auth_views
-
 urlpatterns = [
 # Blog Posts
     path('posts/', ClientBlogPostsView.as_view(), name='posts'),
