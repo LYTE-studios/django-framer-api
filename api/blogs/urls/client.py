@@ -31,5 +31,4 @@ urlpatterns = [
     path('subscription/plans/', ClientSubscriptionView.as_view(), name='plans'),
     path('subscription/billing/', ClientSubscriptionView.as_view(), name='billing'),
     path('subscription/invoices/', ClientSubscriptionView.as_view(), name='invoices'),
-    
 ]
