@@ -1,8 +1,8 @@
 from django.urls import path
 
-from api.blogs.views.client import *
-from api.blogs.views.auth import *
-from api.blogs.forms import EmailAuthenticationForm
+from blogs.views.client import *
+from blogs.views.auth import *
+from blogs.forms import EmailAuthenticationForm
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
