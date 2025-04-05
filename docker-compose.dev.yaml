@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  web:
+    build: ./api
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./api:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DJANGO_DEBUG=True
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - redis
+
+  celery_worker:
+    build: ./api
+    command: watchmedo auto-restart --directory=/app --pattern=*.py --recursive -- celery -A api worker --loglevel=info
+    volumes:
+      - ./api:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_DEBUG=True
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - redis
+
+  celery_beat:
+    build: ./api
+    command: watchmedo auto-restart --directory=/app --pattern=*.py --recursive -- celery -A api beat --loglevel=info
+    volumes:
+      - ./api:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_DEBUG=True
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    command: redis-server --appendonly yes --replica-read-only no
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+volumes:
+  static_volume:
+  media_volume:
+  redis_data:
