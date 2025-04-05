@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Function to display help message
 show_help() {
@@ -26,22 +26,22 @@ install_dependencies() {
     echo "Checking and installing required dependencies..."
     
     # Check if running as root
-    if [ "$EUID" -ne 0 ]; then
+    if [ "$(id -u)" -ne 0 ]; then
         echo "Please run with sudo to install dependencies"
         exit 1
-    }
+    fi
 
     # Update package list
     apt-get update
 
     # Install Python and pip if not installed
-    if ! command -v python3 &> /dev/null; then
+    if ! command -v python3 > /dev/null 2>&1; then
         echo "Installing Python..."
         apt-get install -y python3 python3-pip python3-venv
     fi
 
     # Install Docker if not installed
-    if ! command -v docker &> /dev/null; then
+    if ! command -v docker > /dev/null 2>&1; then
         echo "Installing Docker..."
         apt-get install -y apt-transport-https ca-certificates curl software-properties-common
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -51,7 +51,7 @@ install_dependencies() {
     fi
 
     # Install Docker Compose if not installed
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker-compose > /dev/null 2>&1; then
         echo "Installing Docker Compose..."
         curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
         chmod +x /usr/local/bin/docker-compose
@@ -62,7 +62,7 @@ install_dependencies() {
     systemctl enable docker
 
     # Add current user to docker group
-    usermod -aG docker $SUDO_USER
+    usermod -aG docker "$SUDO_USER"
 
     echo "All dependencies installed successfully!"
     echo "Please log out and back in for group changes to take effect."
@@ -70,8 +70,9 @@ install_dependencies() {
 
 # Function to check if containers are running
 is_running() {
-    if command -v docker-compose &> /dev/null; then
+    if command -v docker-compose > /dev/null 2>&1; then
         docker-compose -f docker-compose.dev.yaml ps --services --filter "status=running" | grep -q "web"
+        return $?
     else
         echo "docker-compose not found"
         return 1
@@ -95,7 +96,7 @@ generate_requirements() {
 # Function to clean up Docker resources
 cleanup_docker() {
     echo "Cleaning up Docker resources..."
-    if command -v docker &> /dev/null; then
+    if command -v docker > /dev/null 2>&1; then
         docker system prune -f
         echo "Cleanup complete!"
     else
@@ -106,7 +107,7 @@ cleanup_docker() {
 
 # Check for docker-compose
 check_docker_compose() {
-    if ! command -v docker-compose &> /dev/null; then
+    if ! command -v docker-compose > /dev/null 2>&1; then
         echo "docker-compose not found. Please run 'sudo ./dev.sh setup' first"
         exit 1
     fi
