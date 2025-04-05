@@ -12,16 +12,12 @@ urlpatterns = [
     # Redirect root to client portal
     path('', RedirectView.as_view(url='/client/', permanent=True)),
     
-    # Client portal routes
-    path('client/', include('blogs.urls.client')),
+    # Include all blogs URLs (client portal, API, and admin portal)
+    path('', include('blogs.urls')),
     
-    # API routes
-    path('api/', include('blogs.urls.api')),
-    
-    # Admin routes (both Django admin and custom admin)
+    # Django admin
     path('api/admin/', admin.site.urls),
-    path('api/admin/portal/', include('blogs.urls.admin')),
     
-    # Authentication routes
+    # DRF authentication
     path('api/auth/', include('rest_framework.urls')),
 ]
