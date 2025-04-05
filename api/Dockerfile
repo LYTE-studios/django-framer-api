@@ -16,9 +16,8 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
-COPY Pipfile Pipfile.lock ./
-RUN pip install pipenv \
-    && pipenv install --system --deploy --ignore-pipfile \
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt \
     && pip install watchdog[watchmedo]  # Add watchdog for development reloading
 
 # Copy project
