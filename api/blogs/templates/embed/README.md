@@ -1,62 +1,28 @@
-# LYTE Blog Embed Documentation
+# LYTE Blog Embed System
 
-## Table of Contents
-1. [Quick Start](#quick-start)
-2. [Prerequisites](#prerequisites)
-3. [Installation](#installation)
-4. [Basic Implementation](#basic-implementation)
-5. [Advanced Configuration](#advanced-configuration)
-6. [Styling Guide](#styling-guide)
-7. [SEO Considerations](#seo-considerations)
-8. [Troubleshooting](#troubleshooting)
-9. [Best Practices](#best-practices)
+A lightweight, customizable blog embed system that allows you to display your LYTE-generated blog posts on any website.
+
+## Features
+
+- 🎨 Automatic light/dark theme support
+- 📱 Fully responsive design
+- 🔒 Secure embed token system
+- ⚡ Fast loading with optimized performance
+- 🖼️ Thumbnail image support
+- 📊 Subscription status handling
 
 ## Quick Start
 
-Add these two lines to your HTML:
-
+1. Get your embed token from your LYTE dashboard
+2. Add the script to your HTML:
 ```html
 <script src="https://your-domain.com/path/to/blog-embed.js" type="module"></script>
-<lyte-blog client-id="YOUR_CLIENT_ID"></lyte-blog>
 ```
 
-## Prerequisites
-
-1. You need a LYTE client ID (obtain this from your LYTE dashboard)
-2. Your website must support JavaScript modules (all modern browsers do)
-3. CORS must be properly configured on your LYTE API server
-
-## Installation
-
-### Step 1: Get the Files
-Copy these files to your web server:
-- `blog-embed.js` - The main embed script
-- `blog-embed.html` - (Optional) Example implementation
-
-### Step 2: Host the Files
-Upload the `blog-embed.js` file to your web server. Common locations:
-```
-/assets/js/blog-embed.js
-/static/js/blog-embed.js
-/scripts/blog-embed.js
-```
-
-### Step 3: Configure CORS
-Ensure your LYTE API server allows requests from your domain. Contact the LYTE team if you need help with this.
-
-## Basic Implementation
-
-### 1. Add the Script
-Place this in your HTML `<head>` section:
-```html
-<script src="/path/to/blog-embed.js" type="module"></script>
-```
-
-### 2. Add the Component
-Place this where you want the blog posts to appear:
+3. Add the blog component where you want your posts to appear:
 ```html
 <lyte-blog 
-    client-id="YOUR_CLIENT_ID" 
+    data-token="YOUR_EMBED_TOKEN" 
     theme="light" 
     posts-per-page="10">
     <noscript>
@@ -65,132 +31,85 @@ Place this where you want the blog posts to appear:
 </lyte-blog>
 ```
 
-## Advanced Configuration
+## Component Attributes
 
-### Available Attributes
+| Attribute | Required | Default | Description |
+|-----------|----------|---------|-------------|
+| data-token | Yes | - | Your unique embed token from LYTE dashboard |
+| theme | No | "light" | Color theme ("light" or "dark") |
+| posts-per-page | No | 10 | Number of posts to display (max 50) |
 
-| Attribute | Type | Default | Description |
-|-----------|------|---------|-------------|
-| client-id | string | required | Your LYTE client ID |
-| theme | string | "light" | Theme ("light" or "dark") |
-| posts-per-page | number | 10 | Number of posts to display |
+## Subscription Requirements
 
-### Example with All Options
-```html
-<lyte-blog 
-    client-id="YOUR_CLIENT_ID" 
-    theme="dark" 
-    posts-per-page="5">
-</lyte-blog>
-```
+The embed system is tied to your LYTE subscription:
 
-## Styling Guide
+- **Active Subscription**: Blog posts will display normally
+- **Trial Period**: Full access during the trial period
+- **Expired/Cancelled**: Posts will not be displayed, and a subscription message will appear
+- **Past Due**: Posts will not be displayed until payment is resolved
 
-### CSS Variables
-You can customize the appearance by overriding these CSS variables:
+## Security
 
-```css
-lyte-blog {
-    --post-bg: #ffffff;        /* Post background color */
-    --title-color: #1a1a1a;    /* Post title color */
-    --text-color: #4a4a4a;     /* Post content color */
-    --date-color: #666666;     /* Publication date color */
-}
-```
+- Embed tokens are unique to each client
+- Tokens can be regenerated from the LYTE dashboard
+- Tokens automatically expire when subscription becomes inactive
+- All requests are rate-limited and monitored for abuse
 
-### Dark Theme Variables
-```css
-lyte-blog[theme="dark"] {
-    --post-bg: #2d2d2d;
-    --title-color: #ffffff;
-    --text-color: #e0e0e0;
-    --date-color: #a0a0a0;
-}
-```
+## Error States
 
-### Custom Styling Example
-```css
-/* Custom container width */
-lyte-blog {
-    max-width: 1200px;
-    margin: 0 auto;
-}
+The embed system handles various states gracefully:
 
-/* Custom grid layout */
-lyte-blog::part(grid) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 3rem;
-}
-```
+- **Loading**: Shows a loading spinner while fetching posts
+- **Empty**: Displays a message when no posts are available
+- **Error**: Shows error message if posts can't be loaded
+- **Subscription Required**: Indicates when subscription is needed
 
-## SEO Considerations
+## Browser Support
 
-1. **Content Visibility**
-   - The embed uses semantic HTML5 elements
-   - Content is visible even without JavaScript
-   - Proper meta tags and datetime attributes
-   - Alt text for images
+- Chrome (latest 2 versions)
+- Firefox (latest 2 versions)
+- Safari (latest 2 versions)
+- Edge (latest 2 versions)
 
-2. **Noscript Fallback**
-   - Always include a noscript tag with alternative content
-   - Consider linking to your main blog page
+## Performance
 
-3. **Best Practices**
-   - Use descriptive alt text for thumbnails
-   - Keep titles and content relevant
-   - Ensure proper heading hierarchy
+- Lazy loading of images
+- Minimal bundle size (~10KB gzipped)
+- No external dependencies
+- Optimized for Core Web Vitals
+
+## Customization
+
+The embed system automatically inherits your website's font settings and provides a responsive layout that adapts to your design. For advanced customization needs:
+
+1. **Theme Colors**: Use the built-in light/dark themes
+2. **Layout**: Responsive grid automatically adjusts to container width
+3. **Typography**: Inherits from your website's font settings
+4. **Custom Styling**: Available through LYTE Enterprise plans
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Posts Not Loading**
-   - Check if your client ID is correct
-   - Verify CORS configuration
+1. **Posts Not Displaying**
+   - Verify your embed token is correct
+   - Check your subscription status
+   - Ensure JavaScript is enabled
    - Check browser console for errors
-   - Ensure API endpoint is accessible
 
-2. **Styling Issues**
-   - Check for CSS conflicts
-   - Verify theme attribute is set correctly
-   - Inspect shadow DOM for styling issues
+2. **Style Conflicts**
+   - The component uses Shadow DOM to prevent style leakage
+   - Contact support if you notice any styling issues
 
 3. **Performance Issues**
-   - Reduce posts-per-page
-   - Optimize thumbnail images
-   - Consider lazy loading
+   - Reduce posts-per-page if loading is slow
+   - Ensure images are being cached properly
+   - Check network tab for any bottlenecks
 
-### Debug Mode
-Add `debug="true"` to see detailed logs:
-```html
-<lyte-blog client-id="YOUR_CLIENT_ID" debug="true"></lyte-blog>
-```
+## Support
 
-## Best Practices
+- Documentation: https://docs.lytestudios.com/embed
+- Email: support@lytestudios.com
+- Dashboard: https://dashboard.lytestudios.com
 
-1. **Performance**
-   - Load the script asynchronously
-   - Set reasonable posts-per-page
-   - Use appropriate image sizes
+## Updates
 
-2. **Accessibility**
-   - Include alt text for images
-   - Maintain color contrast
-   - Use semantic HTML
-
-3. **Responsive Design**
-   - Test on multiple devices
-   - Use flexible grid layouts
-   - Optimize for mobile
-
-4. **Error Handling**
-   - Always include noscript fallback
-   - Handle API errors gracefully
-   - Provide user feedback
-
-5. **Maintenance**
-   - Keep the embed script updated
-   - Monitor API endpoint health
-   - Review and update content regularly
-
-For additional support or custom implementations, contact the LYTE support team.
+The embed system is automatically updated with new features and security patches. No action is required from your side to receive updates.

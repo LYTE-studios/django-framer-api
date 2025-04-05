@@ -5,11 +5,11 @@ class LyteBlogEmbed extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['client-id', 'theme', 'posts-per-page'];
+        return ['data-token', 'theme', 'posts-per-page'];
     }
 
     async connectedCallback() {
-        const clientId = this.getAttribute('client-id');
+        const token = this.getAttribute('data-token');
         const theme = this.getAttribute('theme') || 'light';
         const postsPerPage = parseInt(this.getAttribute('posts-per-page')) || 10;
 
@@ -58,10 +58,38 @@ class LyteBlogEmbed extends HTMLElement {
                     color: var(--date-color, #666);
                     font-size: 0.875rem;
                 }
-                .error {
-                    color: #e53e3e;
-                    padding: 1rem;
+                .message {
+                    padding: 2rem;
                     text-align: center;
+                    border-radius: 8px;
+                    margin: 1rem;
+                }
+                .error {
+                    background-color: #fee2e2;
+                    color: #dc2626;
+                    border: 1px solid #fecaca;
+                }
+                .loading {
+                    background-color: #f3f4f6;
+                    color: #4b5563;
+                }
+                .subscription-error {
+                    background-color: #fef3c7;
+                    color: #d97706;
+                    border: 1px solid #fde68a;
+                }
+                .loading-spinner {
+                    display: inline-block;
+                    width: 2rem;
+                    height: 2rem;
+                    border: 3px solid #e5e7eb;
+                    border-radius: 50%;
+                    border-top-color: #6b7280;
+                    animation: spin 1s linear infinite;
+                    margin-bottom: 1rem;
+                }
+                @keyframes spin {
+                    to { transform: rotate(360deg); }
                 }
                 /* Theme: Dark */
                 :host([theme="dark"]) {
@@ -78,33 +106,71 @@ class LyteBlogEmbed extends HTMLElement {
                 }
             </style>
             <div class="blog-grid">
-                <slot></slot>
+                <div class="message loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading blog posts...</p>
+                </div>
             </div>
         `;
 
+        if (!token) {
+            this.showError('No embed token provided. Please check your integration code.');
+            return;
+        }
+
         try {
-            const response = await fetch(`/api/clients/${clientId}/posts/`);
-            if (!response.ok) throw new Error('Failed to fetch posts');
+            const response = await fetch(`/api/blogs/posts/?embed_token=${encodeURIComponent(token)}`);
             
-            const posts = await response.json();
-            this.shadowRoot.querySelector('.blog-grid').innerHTML = posts
+            if (response.status === 402) {
+                this.showSubscriptionError();
+                return;
+            }
+            
+            if (!response.ok) {
+                throw new Error('Failed to fetch posts');
+            }
+            
+            const data = await response.json();
+            
+            if (!data.results || !data.results.length) {
+                this.shadowRoot.querySelector('.blog-grid').innerHTML = `
+                    <div class="message">No blog posts available yet.</div>
+                `;
+                return;
+            }
+
+            this.shadowRoot.querySelector('.blog-grid').innerHTML = data.results
                 .slice(0, postsPerPage)
                 .map(post => `
                     <article class="blog-post">
-                        ${post.thumbnail ? `<img src="${post.thumbnail}" alt="${post.title}">` : ''}
+                        ${post.thumbnail ? `<img src="${this.escapeHtml(post.thumbnail)}" alt="${this.escapeHtml(post.title)}">` : ''}
                         <div class="blog-post-content">
-                            <h2>${post.title}</h2>
-                            <p>${this.truncateContent(post.content)}</p>
+                            <h2>${this.escapeHtml(post.title)}</h2>
+                            <p>${this.escapeHtml(this.truncateContent(post.content))}</p>
                             <time datetime="${post.published_at}">${this.formatDate(post.published_at)}</time>
                         </div>
                     </article>
                 `).join('');
         } catch (error) {
-            this.shadowRoot.querySelector('.blog-grid').innerHTML = `
-                <div class="error">Failed to load blog posts. Please try again later.</div>
-            `;
+            this.showError('Failed to load blog posts. Please try again later.');
             console.error('Error loading blog posts:', error);
         }
+    }
+
+    showError(message) {
+        this.shadowRoot.querySelector('.blog-grid').innerHTML = `
+            <div class="message error">
+                <p>${this.escapeHtml(message)}</p>
+            </div>
+        `;
+    }
+
+    showSubscriptionError() {
+        this.shadowRoot.querySelector('.blog-grid').innerHTML = `
+            <div class="message subscription-error">
+                <p>This blog feed is currently inactive. Please check your subscription status.</p>
+            </div>
+        `;
     }
 
     truncateContent(content) {
@@ -118,6 +184,15 @@ class LyteBlogEmbed extends HTMLElement {
             month: 'long',
             day: 'numeric'
         });
+    }
+
+    escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 }
 

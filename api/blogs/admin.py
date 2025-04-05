@@ -7,12 +7,35 @@ from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
 from django.core.exceptions import PermissionDenied
 from django.db import models
-from .models import Client, BlogPost, ToneOfVoice, BlogSubject, SpecialEvent
+from .models import Client, BlogPost, ToneOfVoice, BlogSubject, SpecialEvent, Subscription
 from .tasks import generate_blog_posts
 import logging
+import stripe
+from django.conf import settings
 
+stripe.api_key = settings.STRIPE_SECRET_KEY
 logger = logging.getLogger(__name__)
 
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'plan', 'trial_end', 'current_period_end', 'stripe_subscription_id')
+    list_filter = ('status', 'plan')
+    search_fields = ('user__email', 'stripe_customer_id', 'stripe_subscription_id')
+    readonly_fields = ('stripe_customer_id', 'stripe_subscription_id', 'created_at', 'updated_at')
+    actions = ['sync_with_stripe']
+
+    def sync_with_stripe(self, request, queryset):
+        for subscription in queryset:
+            if subscription.stripe_subscription_id:
+                try:
+                    stripe_sub = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
+                    subscription.status = stripe_sub.status
+                    subscription.current_period_end = timezone.datetime.fromtimestamp(stripe_sub.current_period_end)
+                    subscription.save()
+                    messages.success(request, f"Successfully synced subscription for {subscription.user.email}")
+                except stripe.error.StripeError as e:
+                    messages.error(request, f"Error syncing subscription for {subscription.user.email}: {str(e)}")
+    sync_with_stripe.short_description = "Sync selected subscriptions with Stripe"
 
 @admin.register(ToneOfVoice)
 class ToneOfVoiceAdmin(admin.ModelAdmin):
@@ -45,7 +68,6 @@ class ToneOfVoiceAdmin(admin.ModelAdmin):
         return obj.examples.count()
     example_count.short_description = "Number of Examples"
 
-
 class BlogPostInline(admin.TabularInline):
     model = BlogPost
     extra = 0
@@ -65,20 +87,22 @@ class BlogPostInline(admin.TabularInline):
     def has_add_permission(self, request, obj=None):
         return False
 
-
 @admin.register(Client)
 class ClientAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tone_of_voice', 'post_interval_days', 'post_time', 'last_post_generated', 'is_active', 'created_at', 'view_posts')
-    change_list_template = 'admin/blogs/client_changelist.html'
-    list_filter = ('is_active', 'tone_of_voice')
-    search_fields = ('name', 'tone_of_voice__name')
-    readonly_fields = ('last_post_generated', 'created_at', 'updated_at', 'generate_post_button')
-    actions = ['generate_post_now']
+    list_display = ('name', 'user_email', 'subscription_status', 'tone_of_voice', 'post_interval_days', 'post_time', 'last_post_generated', 'is_active', 'created_at', 'view_posts')
+    list_filter = ('is_active', 'tone_of_voice', 'user__subscription__status', 'user__subscription__plan')
+    search_fields = ('name', 'tone_of_voice__name', 'user__email')
+    readonly_fields = ('last_post_generated', 'created_at', 'updated_at', 'generate_post_button', 'subscription_info', 'embed_token')
+    actions = ['generate_post_now', 'regenerate_embed_tokens']
     inlines = [BlogPostInline]
     
     fieldsets = (
         (None, {
-            'fields': ('name', 'is_active', 'generate_post_button')
+            'fields': ('user', 'name', 'is_active', 'generate_post_button')
+        }),
+        ('Subscription', {
+            'fields': ('subscription_info', 'embed_token'),
+            'description': 'Subscription status and embed token for blog integration'
         }),
         ('Content Generation Settings', {
             'fields': ('tone_of_voice', 'gpt_prompt', 'post_interval_days', 'post_time'),
@@ -90,8 +114,51 @@ class ClientAdmin(admin.ModelAdmin):
         })
     )
 
+    def user_email(self, obj):
+        return obj.user.email if obj.user else '-'
+    user_email.short_description = 'User Email'
+
+    def subscription_status(self, obj):
+        if obj.user and hasattr(obj.user, 'subscription'):
+            sub = obj.user.subscription
+            return f"{sub.get_status_display()} ({sub.get_plan_display()})"
+        return '-'
+    subscription_status.short_description = 'Subscription'
+
+    def subscription_info(self, obj):
+        if obj.user and hasattr(obj.user, 'subscription'):
+            sub = obj.user.subscription
+            return format_html(
+                """
+                <div style="margin-bottom: 10px;">
+                    <strong>Status:</strong> {}<br>
+                    <strong>Plan:</strong> {}<br>
+                    <strong>Trial Ends:</strong> {}<br>
+                    <strong>Current Period Ends:</strong> {}<br>
+                    <strong>Stripe Customer ID:</strong> {}<br>
+                    <strong>Stripe Subscription ID:</strong> {}
+                </div>
+                """,
+                sub.get_status_display(),
+                sub.get_plan_display(),
+                sub.trial_end.strftime('%Y-%m-%d %H:%M:%S') if sub.trial_end else 'N/A',
+                sub.current_period_end.strftime('%Y-%m-%d %H:%M:%S') if sub.current_period_end else 'N/A',
+                sub.stripe_customer_id or 'N/A',
+                sub.stripe_subscription_id or 'N/A'
+            )
+        return "No subscription information available"
+    subscription_info.short_description = "Subscription Information"
+
+    def regenerate_embed_tokens(self, request, queryset):
+        import secrets
+        for client in queryset:
+            client.embed_token = secrets.token_urlsafe(32)
+            client.save()
+        messages.success(request, f"Successfully regenerated embed tokens for {queryset.count()} clients")
+    regenerate_embed_tokens.short_description = "Regenerate embed tokens"
+
     def get_urls(self):
-        urls = super(ClientAdmin, self).get_urls()
+        urls = super().get_urls()
         custom_urls = [
             path(
                 '<int:client_id>/generate/',
@@ -125,6 +192,8 @@ class ClientAdmin(admin.ModelAdmin):
             client = Client.objects.get(id=client_id)
             if not client.is_active:
                 messages.error(request, f"Cannot generate post for inactive client: {client.name}")
+            elif not client.can_access_blogs():
+                messages.error(request, f"Client {client.name} does not have an active subscription")
             else:
                 task = generate_blog_posts.delay(client_id)
                 request.session[f'blog_generation_task_{client_id}'] = task.id
@@ -143,7 +212,10 @@ class ClientAdmin(admin.ModelAdmin):
             raise PermissionDenied
         
         now = timezone.localtime(timezone.now())
-        active_clients = Client.objects.filter(is_active=True)
+        active_clients = Client.objects.filter(
+            is_active=True,
+            user__subscription__status__in=['active', 'trialing']
+        )
         
         upcoming_posts = []
         for client in active_clients:
@@ -177,13 +249,16 @@ class ClientAdmin(admin.ModelAdmin):
                 messages.error(request, f"Cannot generate post for inactive client: {client.name}")
                 continue
             
+            if not client.can_access_blogs():
+                messages.error(request, f"Client {client.name} does not have an active subscription")
+                continue
+            
             try:
                 generate_blog_posts(client.id)
                 messages.success(request, f"Blog post generated successfully for {client.name}")
             except Exception as e:
                 messages.error(request, f"Error generating post for {client.name}: {str(e)}")
     generate_post_now.short_description = "Generate blog post now"
-
 
 @admin.register(BlogPost)
 class BlogPostAdmin(admin.ModelAdmin):
@@ -252,9 +327,8 @@ class BlogPostAdmin(admin.ModelAdmin):
         return "No thumbnail available"
     thumbnail_preview.short_description = "Current Thumbnail"
 
-
     def recalculate_ai_score_button(self, obj):
-        if obj and obj.id:  # Only show button if object exists
+        if obj and obj.id:
             url = reverse('admin:blogpost-recalculate-ai-score', args=[obj.id])
             return format_html(
                 '<a class="button" href="{}">Recalculate AI Score</a>',
@@ -318,14 +392,12 @@ class BlogPostAdmin(admin.ModelAdmin):
         return ", ".join([s.name for s in obj.subjects.all()])
     get_subjects.short_description = "Subjects"
 
-
 @admin.register(BlogSubject)
 class BlogSubjectAdmin(admin.ModelAdmin):
     list_display = ('name', 'client', 'usage_count', 'last_used')
     list_filter = ('client',)
     search_fields = ('name', 'client__name')
     readonly_fields = ('usage_count', 'last_used')
-
 
 @admin.register(SpecialEvent)
 class SpecialEventAdmin(admin.ModelAdmin):

@@ -50,7 +50,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 CSRF_TRUSTED_ORIGINS = [
     'https://framer-api.lytestudios.be',
 ]
@@ -159,3 +158,30 @@ CELERY_BROKER_TRANSPORT_OPTIONS = {'replica_read_only': False}
 
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+# Stripe Configuration
+STRIPE_PUBLIC_KEY = os.getenv('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.getenv('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.getenv('STRIPE_WEBHOOK_SECRET')
+
+# Subscription Plans
+SUBSCRIPTION_PLANS = {
+    'basic': {
+        'name': 'Basic Plan',
+        'stripe_price_id': os.getenv('STRIPE_BASIC_PRICE_ID'),
+        'features': ['Daily blog posts', 'Basic analytics'],
+    },
+    'pro': {
+        'name': 'Professional Plan',
+        'stripe_price_id': os.getenv('STRIPE_PRO_PRICE_ID'),
+        'features': ['Multiple daily posts', 'Advanced analytics', 'Priority support'],
+    },
+    'enterprise': {
+        'name': 'Enterprise Plan',
+        'stripe_price_id': os.getenv('STRIPE_ENTERPRISE_PRICE_ID'),
+        'features': ['Custom post frequency', 'Dedicated support', 'Custom integrations'],
+    },
+}
+
+# Embed Script Configuration
+EMBED_SCRIPT_URL = f"{STATIC_URL}embed/blog-embed.js"

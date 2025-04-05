@@ -1,5 +1,8 @@
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class ToneOfVoice(models.Model):
     name = models.CharField(max_length=200)
@@ -27,7 +30,38 @@ class ToneOfVoice(models.Model):
                 formatted += f"(AI Score: {example.ai_score})\n\n"
         return formatted
 
+class Subscription(models.Model):
+    SUBSCRIPTION_STATUS = [
+        ('active', 'Active'),
+        ('past_due', 'Past Due'),
+        ('canceled', 'Canceled'),
+        ('trialing', 'Trial'),
+    ]
+
+    SUBSCRIPTION_PLANS = [
+        ('basic', 'Basic'),
+        ('pro', 'Professional'),
+        ('enterprise', 'Enterprise'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
+    stripe_customer_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_subscription_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=SUBSCRIPTION_STATUS, default='trialing')
+    plan = models.CharField(max_length=20, choices=SUBSCRIPTION_PLANS, default='basic')
+    trial_end = models.DateTimeField(null=True, blank=True)
+    current_period_end = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def is_active(self):
+        return self.status in ['active', 'trialing'] and (
+            self.status == 'active' or 
+            (self.trial_end and self.trial_end > timezone.now())
+        )
+
 class Client(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client', null=True, blank=True)  # Making it nullable initially
     name = models.CharField(max_length=200)
     tone_of_voice = models.ForeignKey(ToneOfVoice, on_delete=models.SET_NULL, null=True, related_name='clients')
     gpt_prompt = models.TextField(help_text="Description of the client's needs and industry-specific requirements")
@@ -37,6 +71,7 @@ class Client(models.Model):
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    embed_token = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique token for embedding blogs")
 
     def __str__(self):
         return self.name
@@ -73,6 +108,14 @@ class Client(models.Model):
         return (current_time.date() > next_post_date or
                 (current_time.date() == next_post_date and
                  current_time.time() >= self.post_time))
+
+    def can_access_blogs(self):
+        """Check if client can access blogs based on subscription status"""
+        return (
+            self.user and 
+            hasattr(self.user, 'subscription') and 
+            self.user.subscription.is_active()
+        ) or not self.user  # Allow access if no user is set (legacy clients)
 
 class BlogSubject(models.Model):
     name = models.CharField(max_length=200)
@@ -124,3 +167,14 @@ class BlogPost(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+
+@receiver(post_save, sender=User)
+def create_user_subscription(sender, instance, created, **kwargs):
+    """Create a trial subscription when a new user is created"""
+    if created:
+        trial_end = timezone.now() + timezone.timedelta(days=14)  # 14-day trial
+        Subscription.objects.create(
+            user=instance,
+            status='trialing',
+            trial_end=trial_end
+        )

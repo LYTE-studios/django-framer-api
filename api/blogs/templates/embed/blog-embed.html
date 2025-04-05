@@ -5,55 +5,157 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LYTE Blog Embed Example</title>
     <script src="blog-embed.js" type="module"></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.5;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .demo-section {
+            margin-bottom: 3rem;
+        }
+        .demo-section h2 {
+            margin-bottom: 1.5rem;
+        }
+        .docs {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+        .docs pre {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .docs code {
+            font-family: monospace;
+        }
+        .docs ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .docs li {
+            margin-bottom: 1rem;
+        }
+        .docs li strong {
+            display: inline-block;
+            min-width: 120px;
+        }
+        .status-examples {
+            display: grid;
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        @media (min-width: 768px) {
+            .status-examples {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
+    <h1>LYTE Blog Embed Demo</h1>
+
     <!-- Example usage with light theme -->
-    <h2>Light Theme Blog Posts</h2>
-    <lyte-blog 
-        client-id="1" 
-        theme="light" 
-        posts-per-page="3">
-        <!-- Optional: Add fallback content for SEO -->
-        <noscript>
-            Please enable JavaScript to view our blog posts or visit our website directly.
-        </noscript>
-    </lyte-blog>
+    <div class="demo-section">
+        <h2>Light Theme Blog Posts</h2>
+        <lyte-blog 
+            data-token="YOUR_EMBED_TOKEN" 
+            theme="light" 
+            posts-per-page="3">
+            <!-- Optional: Add fallback content for SEO -->
+            <noscript>
+                Please enable JavaScript to view our blog posts or visit our website directly.
+            </noscript>
+        </lyte-blog>
+    </div>
 
     <!-- Example usage with dark theme -->
-    <h2>Dark Theme Blog Posts</h2>
-    <lyte-blog 
-        client-id="1" 
-        theme="dark" 
-        posts-per-page="3">
-        <noscript>
-            Please enable JavaScript to view our blog posts or visit our website directly.
-        </noscript>
-    </lyte-blog>
+    <div class="demo-section">
+        <h2>Dark Theme Blog Posts</h2>
+        <lyte-blog 
+            data-token="YOUR_EMBED_TOKEN" 
+            theme="dark" 
+            posts-per-page="3">
+            <noscript>
+                Please enable JavaScript to view our blog posts or visit our website directly.
+            </noscript>
+        </lyte-blog>
+    </div>
+
+    <!-- Status Examples -->
+    <div class="demo-section">
+        <h2>Status Examples</h2>
+        <div class="status-examples">
+            <!-- Loading State -->
+            <div class="message loading">
+                <div class="loading-spinner"></div>
+                <p>Loading blog posts...</p>
+            </div>
+
+            <!-- Subscription Error -->
+            <div class="message subscription-error">
+                <p>This blog feed is currently inactive. Please check your subscription status.</p>
+            </div>
+
+            <!-- Error State -->
+            <div class="message error">
+                <p>Failed to load blog posts. Please try again later.</p>
+            </div>
+
+            <!-- Empty State -->
+            <div class="message">
+                <p>No blog posts available yet.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- Usage Instructions -->
-    <div style="margin-top: 2rem; padding: 1rem; background: #f5f5f5;">
-        <h3>How to Use LYTE Blog Embed</h3>
-        <pre><code>
-<!-- Add the script to your page -->
-&lt;script src="https://your-domain.com/path/to/blog-embed.js" type="module">&lt;/script>
-
-<!-- Add the custom element where you want the blog posts to appear -->
-&lt;lyte-blog 
-    client-id="YOUR_CLIENT_ID" 
+    <div class="docs">
+        <h2>How to Use LYTE Blog Embed</h2>
+        
+        <h3>1. Add the Script</h3>
+        <pre><code>&lt;script src="https://your-domain.com/path/to/blog-embed.js" type="module">&lt;/script></code></pre>
+        
+        <h3>2. Add the Component</h3>
+        <pre><code>&lt;lyte-blog 
+    data-token="YOUR_EMBED_TOKEN" 
     theme="light|dark" 
     posts-per-page="10">
     &lt;noscript>
         Please enable JavaScript to view our blog posts.
     &lt;/noscript>
-&lt;/lyte-blog>
-        </code></pre>
+&lt;/lyte-blog></code></pre>
         
-        <h4>Attributes:</h4>
+        <h3>Attributes</h3>
         <ul>
-            <li><strong>client-id</strong>: Your LYTE client ID (required)</li>
-            <li><strong>theme</strong>: "light" or "dark" (optional, defaults to "light")</li>
-            <li><strong>posts-per-page</strong>: Number of posts to display (optional, defaults to 10)</li>
+            <li>
+                <strong>data-token</strong>
+                <span>Your unique embed token (required). Get this from your LYTE dashboard.</span>
+            </li>
+            <li>
+                <strong>theme</strong>
+                <span>"light" or "dark" (optional, defaults to "light"). Controls the color scheme of the blog posts.</span>
+            </li>
+            <li>
+                <strong>posts-per-page</strong>
+                <span>Number of posts to display (optional, defaults to 10). Maximum value is 50.</span>
+            </li>
         </ul>
+
+        <h3>Security Notes</h3>
+        <ul>
+            <li>Keep your embed token secure. It's tied to your subscription.</li>
+            <li>The embed token will stop working if your subscription becomes inactive.</li>
+            <li>You can regenerate your embed token from the LYTE dashboard if needed.</li>
+        </ul>
+
+        <h3>Customization</h3>
+        <p>The blog embed automatically adapts to your website's font settings and provides a responsive layout. For advanced customization, contact our support team.</p>
     </div>
 </body>
 </html>
