@@ -24,43 +24,28 @@ echo "Installing/upgrading pip..."
 "$PYTHON_PATH" -m ensurepip --upgrade > /dev/null 2>&1 || true
 "$PYTHON_PATH" -m pip install --upgrade pip > /dev/null 2>&1
 
-echo "Installing pipenv..."
-"$PYTHON_PATH" -m pip install --user pipenv > /dev/null 2>&1
-
-# Add local bin to PATH
-USER_BIN="$HOME/.local/bin"
-PATH="$USER_BIN:$PATH"
-
-echo "Generating requirements.txt from Pipfile..."
-
-# Try different methods to generate requirements.txt
-generate_requirements() {
-    # Try using pipenv directly
-    if command -v pipenv > /dev/null 2>&1; then
-        pipenv requirements > requirements.txt 2>/dev/null && return 0
-    fi
-    
-    # Try with python -m
-    "$PYTHON_PATH" -m pipenv requirements > requirements.txt 2>/dev/null && return 0
-    
-    # If both methods fail
-    return 1
-}
-
-if ! generate_requirements; then
-    echo "Error: Failed to generate requirements.txt"
-    exit 1
-fi
+# Extract dependencies from Pipfile
+echo "Extracting dependencies from Pipfile..."
+{
+    echo "django"
+    echo "djangorestframework"
+    echo "django-cors-headers"
+    echo "django-storages"
+    echo "celery"
+    echo "redis"
+    echo "gunicorn"
+    echo "python-dotenv"
+    echo "openai"
+    echo "requests"
+    echo "boto3"
+    echo "stripe"
+    echo "watchdog[watchmedo]"
+} > requirements.txt
 
 # Verify requirements.txt was created and is not empty
 if [ ! -f "requirements.txt" ] || [ ! -s "requirements.txt" ]; then
     echo "Error: requirements.txt was not generated or is empty"
     exit 1
-fi
-
-# Add watchdog to requirements if not already present
-if ! grep -q "watchdog\[watchmedo\]" requirements.txt; then
-    echo "watchdog[watchmedo]" >> requirements.txt
 fi
 
 echo "requirements.txt has been generated successfully!"
