@@ -3,7 +3,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: gunicorn --bind 0.0.0.0:8000 api.wsgi:application
+    command: sh -c "gunicorn --bind 0.0.0.0:8000 api.wsgi:application"
     volumes:
       - ./api:/app
       - static_volume:/app/staticfiles
@@ -24,7 +24,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A api worker --loglevel=info
+    command: sh -c "celery -A api worker --loglevel=info"
     volumes:
       - ./api:/app
       - static_volume:/app/staticfiles
@@ -42,7 +42,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: celery -A api beat --loglevel=info
+    command: sh -c "celery -A api beat --loglevel=info"
     volumes:
       - ./api:/app
       - static_volume:/app/staticfiles

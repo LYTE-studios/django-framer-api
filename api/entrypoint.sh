@@ -67,4 +67,13 @@ python manage.py createcachetable
 # Execute the command passed to docker
 echo "Starting service..."
 echo "Running command: $@"
+
+# Check if command exists
+if [ -z "$1" ]; then
+    echo "Error: No command provided"
+    exit 1
+fi
+
+# Run the command
+echo "Executing command..."
 exec "$@"
