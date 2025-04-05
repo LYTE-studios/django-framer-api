@@ -1,4 +1,6 @@
-{% extends "client/base.html" %}
+{% extends "client/auth_base.html" %}
+
+{% block title %}Sign In{% endblock %}
 
 {% block content %}
 <div class="flex min-h-screen items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -36,6 +38,15 @@
                 </button>
             </div>
         </form>
+        <div class="mt-6 text-center text-sm">
+            <p class="text-gray-600">
+                Don't have an account?
+                <a href="{% url 'register' %}" class="font-medium text-indigo-600 hover:text-indigo-500">Sign up</a>
+            </p>
+            <p class="mt-2 text-gray-600">
+                <a href="{% url 'password_reset' %}" class="font-medium text-indigo-600 hover:text-indigo-500">Forgot your password?</a>
+            </p>
+        </div>
     </div>
 </div>
 {% endblock %}
