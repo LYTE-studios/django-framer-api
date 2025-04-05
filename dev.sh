@@ -71,7 +71,7 @@ install_dependencies() {
 # Function to check if containers are running
 is_running() {
     if command -v docker-compose > /dev/null 2>&1; then
-        docker-compose -f docker-compose.dev.yaml ps --services --filter "status=running" | grep -q "web"
+        docker-compose ps --services --filter "status=running" | grep -q "web"
         return $?
     else
         echo "docker-compose not found"
@@ -123,7 +123,7 @@ wait_for_services() {
     
     # Wait for up to 30 seconds
     for i in $(seq 1 30); do
-        if docker-compose -f docker-compose.dev.yaml ps | grep -q "running"; then
+        if docker-compose ps | grep -q "running"; then
             echo "Services are ready!"
             return 0
         fi
@@ -132,7 +132,7 @@ wait_for_services() {
     done
     
     echo "Error: Services failed to start within 30 seconds"
-    docker-compose -f docker-compose.dev.yaml logs
+    docker-compose logs
     return 1
 }
 
@@ -163,11 +163,11 @@ case "$1" in
         ;;
     up)
         check_docker_compose
-        echo "Starting development environment..."
+        echo "Starting environment..."
         generate_requirements
-        docker-compose -f docker-compose.dev.yaml up -d
+        docker-compose up -d
         if wait_for_services; then
-            echo "Development environment is ready!"
+            echo "Environment is ready!"
             echo "Access the application at http://localhost:8000"
         else
             echo "Failed to start services. Check the logs above for details."
@@ -176,17 +176,17 @@ case "$1" in
         ;;
     down)
         check_docker_compose
-        echo "Stopping development environment..."
-        docker-compose -f docker-compose.dev.yaml down
+        echo "Stopping environment..."
+        docker-compose down
         ;;
     restart)
         check_docker_compose
-        echo "Restarting development environment..."
-        docker-compose -f docker-compose.dev.yaml down
+        echo "Restarting environment..."
+        docker-compose down
         generate_requirements
-        docker-compose -f docker-compose.dev.yaml up -d
+        docker-compose up -d
         if wait_for_services; then
-            echo "Development environment restarted successfully!"
+            echo "Environment restarted successfully!"
         else
             echo "Failed to restart services. Check the logs above for details."
             exit 1
@@ -194,13 +194,13 @@ case "$1" in
         ;;
     logs)
         check_docker_compose
-        docker-compose -f docker-compose.dev.yaml logs -f
+        docker-compose logs -f
         ;;
     build)
         check_docker_compose
         echo "Rebuilding services..."
         generate_requirements
-        docker-compose -f docker-compose.dev.yaml build --no-cache
+        docker-compose build --no-cache
         ;;
     prod)
         check_docker_compose
@@ -217,17 +217,17 @@ case "$1" in
     shell)
         check_docker_compose
         if is_running; then
-            docker-compose -f docker-compose.dev.yaml exec web /bin/bash
+            docker-compose exec web /bin/bash
         else
-            echo "Development environment is not running. Start it with './dev.sh up'"
+            echo "Environment is not running. Start it with './dev.sh up'"
         fi
         ;;
     test)
         check_docker_compose
         if is_running; then
-            docker-compose -f docker-compose.dev.yaml exec web python manage.py test
+            docker-compose exec web python manage.py test
         else
-            echo "Development environment is not running. Start it with './dev.sh up'"
+            echo "Environment is not running. Start it with './dev.sh up'"
         fi
         ;;
     reqs)
