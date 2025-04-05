@@ -1,0 +1,142 @@
+{% extends "client/base.html" %}
+
+{% block title %}Settings - LYTE Blog Manager{% endblock %}
+
+{% block header %}Blog Settings{% endblock %}
+
+{% block content %}
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <form method="post" class="space-y-8 divide-y divide-gray-200">
+        {% csrf_token %}
+        
+        <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
+            <div class="space-y-6 sm:space-y-5">
+                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+                    <label for="id_name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                        Business Name
+                    </label>
+                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                        <input type="text" name="name" id="id_name" value="{{ object.name }}"
+                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                        Tone of Voice
+                    </label>
+                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                        <select id="id_tone_of_voice" name="tone_of_voice"
+                            class="max-w-lg block focus:ring-primary focus:border-primary w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                            <option value="">---------</option>
+                            {% for tone in form.fields.tone_of_voice.queryset %}
+                            <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
+                                {{ tone.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                        Content Guidelines
+                    </label>
+                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                        <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
+                            class="max-w-lg shadow-sm block w-full focus:ring-primary focus:border-primary sm:text-sm border-gray-300 rounded-md">{{ object.gpt_prompt }}</textarea>
+                        <p class="mt-2 text-sm text-gray-500">Describe your content preferences, industry focus, and any specific requirements.</p>
+                    </div>
+                </div>
+
+                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                        Post Frequency (days)
+                    </label>
+                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                        <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
+                            min="1" max="30"
+                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                        <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated? (1-30 days)</p>
+                    </div>
+                </div>
+
+                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
+                    <label for="id_post_time" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                        Post Time
+                    </label>
+                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                        <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
+                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                        <p class="mt-2 text-sm text-gray-500">What time should posts be generated? (24-hour format)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="pt-5">
+            <div class="flex justify-end">
+                <button type="submit"
+                    class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- Embed Code Section -->
+<div class="mt-8">
+    <h2 class="text-lg font-medium text-gray-900">Blog Embed Code</h2>
+    <div class="mt-4 bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="text-sm text-gray-500 mb-4">
+                Use this code to embed your blog posts on your website. Copy and paste it into your HTML where you want the posts to appear.
+            </div>
+            <div class="bg-gray-50 rounded-md p-4">
+                <pre class="text-sm text-gray-700 whitespace-pre-wrap break-all">{{ embed_code }}</pre>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button type="button" id="copyButton"
+                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle copy to clipboard
+    const copyButton = document.getElementById('copyButton');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const embedCode = "{{ embed_code|escapejs }}";
+            navigator.clipboard.writeText(embedCode).then(function() {
+                copyButton.textContent = 'Copied!';
+                setTimeout(function() {
+                    copyButton.textContent = 'Copy to Clipboard';
+                }, 2000);
+            });
+        });
+    }
+
+    // Handle message fadeout
+    const messages = document.querySelectorAll('[role="alert"]');
+    if (messages.length > 0) {
+        setTimeout(function() {
+            messages.forEach(function(alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease-in-out';
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

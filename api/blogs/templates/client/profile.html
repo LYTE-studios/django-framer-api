@@ -1,0 +1,198 @@
+{% extends "client/base.html" %}
+
+{% block title %}Profile - LYTE Blog Manager{% endblock %}
+
+{% block header %}Profile Settings{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Profile Information -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="post" class="space-y-8 divide-y divide-gray-200">
+                {% csrf_token %}
+                
+                <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
+                    <div>
+                        <div class="mt-6 sm:mt-5 space-y-6 sm:space-y-5">
+                            <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                                <label for="id_first_name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                                    First Name
+                                </label>
+                                <div class="mt-1 sm:mt-0 sm:col-span-2">
+                                    <input type="text" name="first_name" id="id_first_name" value="{{ object.first_name }}"
+                                        class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                            </div>
+
+                            <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                                <label for="id_last_name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                                    Last Name
+                                </label>
+                                <div class="mt-1 sm:mt-0 sm:col-span-2">
+                                    <input type="text" name="last_name" id="id_last_name" value="{{ object.last_name }}"
+                                        class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                            </div>
+
+                            <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:border-t sm:border-gray-200 sm:pt-5">
+                                <label for="id_email" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                                    Email Address
+                                </label>
+                                <div class="mt-1 sm:mt-0 sm:col-span-2">
+                                    <input type="email" name="email" id="id_email" value="{{ object.email }}"
+                                        class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-5">
+                    <div class="flex justify-end">
+                        <button type="submit"
+                            class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                            Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Change Password</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>Update your password to keep your account secure.</p>
+            </div>
+            <form method="post" action="{% url 'password_change' %}" class="mt-5">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <div>
+                        <label for="current_password" class="block text-sm font-medium text-gray-700">Current Password</label>
+                        <input type="password" name="old_password" id="current_password" required
+                            class="mt-1 block w-full shadow-sm focus:ring-primary focus:border-primary sm:text-sm border-gray-300 rounded-md">
+                    </div>
+
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700">New Password</label>
+                        <input type="password" name="new_password1" id="new_password" required
+                            class="mt-1 block w-full shadow-sm focus:ring-primary focus:border-primary sm:text-sm border-gray-300 rounded-md">
+                    </div>
+
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                        <input type="password" name="new_password2" id="confirm_password" required
+                            class="mt-1 block w-full shadow-sm focus:ring-primary focus:border-primary sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <div class="mt-5">
+                    <button type="submit"
+                        class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Account -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Delete Account</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>Once you delete your account, you will lose all data associated with it.</p>
+            </div>
+            <div class="mt-5">
+                <button type="button" id="delete-account"
+                    class="inline-flex items-center justify-center px-4 py-2 border border-transparent font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm">
+                    Delete Account
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Modal -->
+<div id="delete-modal" class="hidden fixed z-10 inset-0 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                </div>
+                <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                        Delete Account
+                    </h3>
+                    <div class="mt-2">
+                        <p class="text-sm text-gray-500">
+                            Are you sure you want to delete your account? All of your data will be permanently removed.
+                            This action cannot be undone.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <form method="post" action="{% url 'client:delete_account' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Delete
+                    </button>
+                </form>
+                <button type="button" id="cancel-delete"
+                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('delete-modal');
+    const deleteButton = document.getElementById('delete-account');
+    const cancelButton = document.getElementById('cancel-delete');
+
+    deleteButton.addEventListener('click', function() {
+        deleteModal.classList.remove('hidden');
+    });
+
+    cancelButton.addEventListener('click', function() {
+        deleteModal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            deleteModal.classList.add('hidden');
+        }
+    });
+
+    // Handle success messages fadeout
+    const messages = document.querySelectorAll('[role="alert"]');
+    if (messages.length > 0) {
+        setTimeout(function() {
+            messages.forEach(function(alert) {
+                alert.style.opacity = '0';
+                alert.style.transition = 'opacity 0.5s ease-in-out';
+                setTimeout(function() {
+                    alert.style.display = 'none';
+                }, 500);
+            });
+        }, 5000);
+    }
+});
+</script>
+{% endblock %}

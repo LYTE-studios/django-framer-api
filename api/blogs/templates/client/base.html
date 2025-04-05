@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}LYTE Blog Manager{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#0f172a',
+                        secondary: '#334155',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-primary text-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <span class="text-xl font-bold">LYTE</span>
+                    </div>
+                    <div class="hidden md:block">
+                        <div class="ml-10 flex items-baseline space-x-4">
+                            <a href="{% url 'client:dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium {% if request.resolver_match.url_name == 'dashboard' %}bg-secondary{% endif %}">Dashboard</a>
+                            <a href="{% url 'client:posts' %}" class="px-3 py-2 rounded-md text-sm font-medium {% if request.resolver_match.url_name == 'posts' %}bg-secondary{% endif %}">Blog Posts</a>
+                            <a href="{% url 'client:settings' %}" class="px-3 py-2 rounded-md text-sm font-medium {% if request.resolver_match.url_name == 'settings' %}bg-secondary{% endif %}">Settings</a>
+                            <a href="{% url 'client:subscription' %}" class="px-3 py-2 rounded-md text-sm font-medium {% if request.resolver_match.url_name == 'subscription' %}bg-secondary{% endif %}">Subscription</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-4 flex items-center md:ml-6">
+                        <a href="{% url 'client:profile' %}" class="text-sm font-medium">{{ request.user.email }}</a>
+                        <form method="post" action="{% url 'logout' %}" class="ml-4">
+                            {% csrf_token %}
+                            <button type="submit" class="text-sm font-medium text-gray-300 hover:text-white">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="px-4 py-6 sm:px-0">
+            <h1 class="text-3xl font-bold text-gray-900">
+                {% block header %}{% endblock %}
+            </h1>
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="px-4 sm:px-0">
+            {% for message in messages %}
+            <div class="rounded-md p-4 mb-4 {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-green-50 text-green-700{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Content -->
+        <div class="px-4 sm:px-0">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 mt-8">
+        <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+            <div class="text-center text-sm text-gray-500">
+                &copy; {% now "Y" %} LYTE. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
