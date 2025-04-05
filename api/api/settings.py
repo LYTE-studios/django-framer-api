@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add WhiteNoise
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -60,7 +61,7 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only in development
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # REST Framework settings
@@ -99,7 +100,7 @@ WSGI_APPLICATION = 'api.wsgi.application'
 from .my_secrets import database
 
 DATABASES = {
-    'default': database or  {
+    'default': database or {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
@@ -126,21 +127,30 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-AWS_STORAGE_BUCKET_NAME = "jobr-api"
-AWS_S3_REGION_NAME = "eu-central-1"
-AWS_S3_FILE_OVERWRITE = False
-AWS_S3_VERIFY = True
-AWS_S3_ADDRESSING_STYLE = "virtual"
-AWS_DEFAULT_ACL = "public-read"
-STORAGES_DEBUG = True
-
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
-
-STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# Static files and media configuration
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
-STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+STATIC_URL = '/static/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
+
+# Use S3 in production, local storage in development
+if not DEBUG:
+    AWS_STORAGE_BUCKET_NAME = "jobr-api"
+    AWS_S3_REGION_NAME = "eu-central-1"
+    AWS_S3_FILE_OVERWRITE = False
+    AWS_S3_VERIFY = True
+    AWS_S3_ADDRESSING_STYLE = "virtual"
+    AWS_DEFAULT_ACL = "public-read"
+    STORAGES_DEBUG = True
+
+    DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+    AWS_QUERYSTRING_AUTH = False
+    AWS_S3_CUSTOM_DOMAIN = f"{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    STATIC_URL = f"https://{AWS_S3_CUSTOM_DOMAIN}/"
+else:
+    # Use WhiteNoise for static files in development
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 ALLOWED_HOSTS = ["*"]
 
@@ -183,5 +193,5 @@ SUBSCRIPTION_PLANS = {
     },
 }
 
-# Embed Script Configuration
-EMBED_SCRIPT_URL = f"{STATIC_URL}embed/blog-embed.js"
+# Frontend URL for embed script
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:8000')

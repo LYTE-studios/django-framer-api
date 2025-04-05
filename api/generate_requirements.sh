@@ -30,6 +30,7 @@ stripe==7.10.0
 watchdog[watchmedo]==3.0.0
 psycopg2-binary==2.9.9
 whitenoise==6.6.0
+pillow==10.2.0
 EOL
 
 # Check if requirements.txt was created
