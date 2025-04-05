@@ -83,7 +83,6 @@ is_running() {
 generate_requirements() {
     echo "Starting requirements generation..."
     echo "Current directory: $(pwd)"
-    echo "Current user: $(whoami)"
     
     # Check if we're in the right directory structure
     if [ ! -d "api" ]; then
@@ -116,21 +115,25 @@ generate_requirements() {
     
     # Return to original directory
     cd ..
+}
+
+# Function to wait for services
+wait_for_services() {
+    echo "Waiting for services to be ready..."
     
-    # Verify requirements.txt exists and has content
-    if [ ! -f "api/requirements.txt" ]; then
-        echo "Error: requirements.txt was not generated"
-        exit 1
-    fi
+    # Wait for up to 30 seconds
+    for i in $(seq 1 30); do
+        if docker-compose -f docker-compose.dev.yaml ps | grep -q "running"; then
+            echo "Services are ready!"
+            return 0
+        fi
+        echo "Waiting... ($i/30)"
+        sleep 1
+    done
     
-    if [ ! -s "api/requirements.txt" ]; then
-        echo "Error: requirements.txt is empty"
-        exit 1
-    fi
-    
-    echo "Requirements generated successfully at api/requirements.txt"
-    echo "File contents:"
-    cat api/requirements.txt
+    echo "Error: Services failed to start within 30 seconds"
+    docker-compose -f docker-compose.dev.yaml logs
+    return 1
 }
 
 # Function to clean up Docker resources
@@ -163,8 +166,13 @@ case "$1" in
         echo "Starting development environment..."
         generate_requirements
         docker-compose -f docker-compose.dev.yaml up -d
-        echo "Development environment is ready!"
-        echo "Access the application at http://localhost:8000"
+        if wait_for_services; then
+            echo "Development environment is ready!"
+            echo "Access the application at http://localhost:8000"
+        else
+            echo "Failed to start services. Check the logs above for details."
+            exit 1
+        fi
         ;;
     down)
         check_docker_compose
@@ -177,6 +185,12 @@ case "$1" in
         docker-compose -f docker-compose.dev.yaml down
         generate_requirements
         docker-compose -f docker-compose.dev.yaml up -d
+        if wait_for_services; then
+            echo "Development environment restarted successfully!"
+        else
+            echo "Failed to restart services. Check the logs above for details."
+            exit 1
+        fi
         ;;
     logs)
         check_docker_compose
@@ -186,13 +200,19 @@ case "$1" in
         check_docker_compose
         echo "Rebuilding services..."
         generate_requirements
-        docker-compose -f docker-compose.dev.yaml build
+        docker-compose -f docker-compose.dev.yaml build --no-cache
         ;;
     prod)
         check_docker_compose
         echo "Starting production environment..."
         generate_requirements
         docker-compose up -d
+        if wait_for_services; then
+            echo "Production environment is ready!"
+        else
+            echo "Failed to start services. Check the logs above for details."
+            exit 1
+        fi
         ;;
     shell)
         check_docker_compose
