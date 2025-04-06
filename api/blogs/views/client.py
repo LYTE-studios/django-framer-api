@@ -7,7 +7,12 @@ from ..models import Client, BlogPost, Subscription
 class ClientRequiredMixin(LoginRequiredMixin):
     """Verify that the current user has an associated client and active subscription"""
     def dispatch(self, request, *args, **kwargs):
-        if not request.user.subscription.is_active():
+        # Check if user is authenticated (from LoginRequiredMixin)
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+            
+        # Only redirect to subscription if user has no active subscription
+        if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
             return redirect('client:subscription')
         
         # Create a client if one doesn't exist
@@ -17,7 +22,7 @@ class ClientRequiredMixin(LoginRequiredMixin):
                 name=f"{request.user.email}'s Blog"  # Default name
             )
             
-        return super().dispatch(request, *args, **kwargs)
+        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
 
 class ClientDashboardView(ClientRequiredMixin, TemplateView):
     template_name = 'client/dashboard.html'
@@ -76,10 +81,6 @@ class ClientProfileView(ClientRequiredMixin, UpdateView):
 
 class ClientSubscriptionView(LoginRequiredMixin, TemplateView):
     template_name = 'client/subscription.html'
-    
-    def dispatch(self, request, *args, **kwargs):
-        # Always allow access to subscription page, even without client
-        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
