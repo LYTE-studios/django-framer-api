@@ -10,6 +10,7 @@ show_help() {
     echo "  up        Start the environment"
     echo "  down      Stop the environment"
     echo "  restart   Restart the environment"
+    echo "  reload    Full rebuild and reload (for code changes)"
     echo "  logs      Show logs from all services"
     echo "  build     Rebuild all services"
     echo "  shell     Open a shell in the web container"
@@ -168,6 +169,44 @@ case "$1" in
             echo "Environment is not running. Start it with './dev.sh up'"
         fi
         ;;
+    reload)
+        check_docker_compose
+        echo "Performing zero-downtime reload (for code changes)..."
+        
+        # Rebuild the web image in the background
+        echo "Rebuilding web service..."
+        docker-compose build web
+        
+        # Scale up with new image
+        echo "Starting new containers..."
+        docker-compose up -d --scale web=2 --no-recreate
+        
+        # Wait for new containers to be healthy
+        echo "Waiting for new containers to be ready..."
+        for i in $(seq 1 30); do
+            if docker-compose ps | grep -q "healthy"; then
+                break
+            fi
+            echo -n "."
+            sleep 1
+        done
+        echo
+        
+        # Run migrations on the new container
+        echo "Running migrations..."
+        NEW_CONTAINER=$(docker-compose ps -q web | tail -n1)
+        docker exec $NEW_CONTAINER python manage.py migrate
+        
+        # Scale down old containers
+        echo "Removing old containers..."
+        docker-compose up -d --scale web=1 --no-recreate
+        
+        # Remove any orphaned containers
+        docker-compose up -d --remove-orphans
+        
+        echo "Reload completed with zero downtime! All changes are now live."
+        ;;
+        
     clean)
         check_docker_compose
         cleanup_docker
