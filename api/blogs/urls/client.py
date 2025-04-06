@@ -28,7 +28,7 @@ urlpatterns = [
         template_name='client/login.html',
         authentication_form=EmailAuthenticationForm
     ), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/client/'), name='logout'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('accounts/register/', RegisterView.as_view(), name='register'),
     
     # Password Reset URLs

@@ -8,9 +8,11 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    # Redirect root to client portal
+    # Client portal URLs - accessible at both root and /client/
     path('', include('blogs.urls.client')),
-        
+    path('client/', include('blogs.urls.client')),
+    
+    # API URLs
     path('api/', include('blogs.urls.api')),
     
     # Django admin
