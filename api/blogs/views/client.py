@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse, resolve
 from django.shortcuts import redirect, resolve_url
+from django.http import HttpResponseRedirect
 from django.utils import timezone
 from django.contrib import messages
 import stripe
@@ -25,7 +26,7 @@ class OnboardingRequiredMixin(LoginRequiredMixin):
             )
         
         # Check if onboarding is completed
-        onboarding_url = resolve_url('client:onboarding')
+        onboarding_url = reverse('client:onboarding')
         client = request.user.client
         client.refresh_from_db()  # Ensure we have latest data
         
@@ -34,9 +35,13 @@ class OnboardingRequiredMixin(LoginRequiredMixin):
         logger.info(f"Onboarding URL: {onboarding_url}")
         logger.info(f"Onboarding completed: {client.completed_onboarding}")
         
-        if not client.completed_onboarding and request.path != onboarding_url:
+        # Resolve the current URL to compare with onboarding URL
+        current_url = resolve(request.path).url_name
+        logger.info(f"Current URL name: {current_url}")
+        
+        if not client.completed_onboarding and current_url != 'onboarding':
             logger.info("Redirecting to onboarding")
-            return redirect('client:onboarding')
+            return HttpResponseRedirect(onboarding_url)
             
         # Check subscription status
         if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
@@ -142,9 +147,13 @@ Generate blog posts that:
                 logger.info(f"Client data: name={client.name}, gpt_prompt={bool(client.gpt_prompt)}")
                 messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
                 
-                # Redirect to dashboard
-                from django.shortcuts import redirect
-                return redirect('client:dashboard')
+                # Get success URL and verify it exists
+                success_url = reverse('client:dashboard')
+                logger.info(f"Redirecting to: {success_url}")
+                
+                # Use HttpResponseRedirect for proper 302 handling
+                from django.http import HttpResponseRedirect
+                return HttpResponseRedirect(success_url)
                 
             except Exception as e:
                 logger.error(f"Error during onboarding: {str(e)}")
