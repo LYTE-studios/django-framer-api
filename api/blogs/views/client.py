@@ -36,10 +36,20 @@ class ClientRequiredMixin(OnboardingRequiredMixin):
     """Legacy mixin name for backward compatibility"""
     pass
 
+from django import forms
+
+class OnboardingForm(forms.ModelForm):
+    description = forms.CharField(widget=forms.Textarea, required=True)
+    industry = forms.CharField(required=True)
+
+    class Meta:
+        model = Client
+        fields = ['name']
+
 class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using OnboardingRequiredMixin
     template_name = 'client/onboarding.html'
     model = Client
-    fields = ['name']
+    form_class = OnboardingForm
     success_url = reverse_lazy('client:dashboard')
     
     def get_object(self):
@@ -53,8 +63,8 @@ class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using
     def form_valid(self, form):
         client = form.save(commit=False)
         # Use the description to create a GPT prompt
-        description = self.request.POST.get('description', '')
-        industry = self.request.POST.get('industry', '')
+        description = form.cleaned_data['description']
+        industry = form.cleaned_data['industry']
         client.gpt_prompt = f"""Industry: {industry}
 Business Description: {description}
 
@@ -66,7 +76,12 @@ Generate blog posts that:
 """
         client.completed_onboarding = True
         client.save()
+        messages.success(self.request, "Setup completed successfully!")
         return super().form_valid(form)
+
+    def form_invalid(self, form):
+        messages.error(self.request, "Please fill in all required fields.")
+        return super().form_invalid(form)
 
 class ClientDashboardView(ClientRequiredMixin, TemplateView):
     template_name = 'client/dashboard.html'
