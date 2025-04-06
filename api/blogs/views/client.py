@@ -11,9 +11,9 @@ class ClientRequiredMixin(LoginRequiredMixin):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
             
-        # Only redirect to subscription if user has no active subscription
+        # Redirect to settings if user has no active subscription
         if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
-            return redirect('client:subscription')
+            return redirect('client:settings')
         
         # Create a client if one doesn't exist
         if not hasattr(request.user, 'client'):
@@ -62,6 +62,8 @@ class ClientBlogPostsView(ClientRequiredMixin, ListView):
             client=self.request.user.client
         ).order_by('-created_at')
 
+from django.conf import settings
+
 class ClientSettingsView(ClientRequiredMixin, UpdateView):
     template_name = 'client/settings.html'
     model = Client
@@ -70,6 +72,13 @@ class ClientSettingsView(ClientRequiredMixin, UpdateView):
     
     def get_object(self):
         return self.request.user.client
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if hasattr(self.request.user, 'subscription'):
+            context['subscription'] = self.request.user.subscription
+        context['stripe_public_key'] = settings.STRIPE_PUBLIC_KEY
+        return context
 
 class ClientProfileView(ClientRequiredMixin, UpdateView):
     template_name = 'client/profile.html'
@@ -78,6 +87,17 @@ class ClientProfileView(ClientRequiredMixin, UpdateView):
     
     def get_object(self):
         return self.request.user
+
+class ClientTestView(ClientRequiredMixin, TemplateView):
+    template_name = 'client/test.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get the embed code from settings view
+        with open('blogs/templates/embed/blog-embed.js', 'r') as f:
+            embed_code = f.read()
+        context['embed_code'] = f'<script>{embed_code}</script>'
+        return context
 
 class ClientSubscriptionView(LoginRequiredMixin, TemplateView):
     template_name = 'client/subscription.html'

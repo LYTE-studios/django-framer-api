@@ -13,16 +13,15 @@ urlpatterns = [
     path('posts/', ClientBlogPostsView.as_view(), name='posts'),
     path('posts/new/', ClientBlogPostsView.as_view(), name='new-post'),
     path('posts/<int:pk>/', ClientBlogPostsView.as_view(), name='edit-post'),
+    path('test/', ClientTestView.as_view(), name='test'),
     
     # Settings
     path('settings/', ClientSettingsView.as_view(), name='settings'),
     path('settings/profile/', ClientProfileView.as_view(), name='profile'),
     
-    # Subscription
-    path('subscription/', ClientSubscriptionView.as_view(), name='subscription'),
+    # Subscription endpoint for Stripe
     path('subscription/create/', ClientSubscriptionView.as_view(), name='create_subscription'),
-    path('subscription/cancel/', ClientSubscriptionView.as_view(), name='cancel_subscription'),
-
+    
     path('delete-account/', ClientProfileView.as_view(), name='delete_account'),
 
     # Authentication URLs

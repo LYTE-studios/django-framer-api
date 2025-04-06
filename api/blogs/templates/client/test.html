@@ -1,0 +1,29 @@
+{% extends "client/base.html" %}
+
+{% block title %}Test Blog View - LYTE Blog Manager{% endblock %}
+
+{% block header %}Test Blog View{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Description -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Preview Your Blog</h3>
+            <div class="mt-2 text-sm text-gray-500">
+                <p>This is how your blog posts will appear on your website. The content below is rendered using the same embed code that you'll use on your site.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Blog Preview -->
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <script>
+                window.LYTE_BLOG_TOKEN = "{{ request.user.client.embed_token }}";
+            </script>
+            {{ embed_code|safe }}
+        </div>
+    </div>
+</div>
+{% endblock %}
