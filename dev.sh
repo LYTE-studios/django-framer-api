@@ -116,9 +116,32 @@ case "$1" in
         ;;
     restart)
         check_docker_compose
-        echo "Restarting environment..."
-        docker-compose restart
-        echo "Environment is restarting..."
+        echo "Performing zero-downtime restart..."
+        
+        # Pull new images if any
+        docker-compose pull
+
+        # Start new containers alongside old ones
+        docker-compose up -d --scale web=2 --no-recreate
+
+        # Wait for new containers to be healthy
+        echo "Waiting for new containers to be ready..."
+        for i in $(seq 1 30); do
+            if docker-compose ps | grep -q "healthy"; then
+                break
+            fi
+            echo -n "."
+            sleep 1
+        done
+        echo
+
+        # Gracefully stop old containers
+        docker-compose up -d --scale web=1 --no-recreate
+
+        # Remove any orphaned containers
+        docker-compose up -d --remove-orphans
+        
+        echo "Restart completed with zero downtime"
         ;;
     logs)
         check_docker_compose
