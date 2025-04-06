@@ -1,4 +1,4 @@
-from django.views.generic import TemplateView, ListView, DetailView, UpdateView
+from django.views.generic import TemplateView, ListView, DetailView, UpdateView, FormView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse, resolve
@@ -144,9 +144,16 @@ Generate blog posts that:
         logger.warning(f"Form errors: {form.errors}")
         logger.warning(f"Form data: {form.data}")
         
+        # Add error messages for each field
         for field, errors in form.errors.items():
             for error in errors:
-                messages.error(self.request, f"{field}: {error}")
+                messages.error(self.request, f"{field.title()}: {error}")
+        
+        # Add form-wide errors if any
+        if form.non_field_errors():
+            for error in form.non_field_errors():
+                messages.error(self.request, error)
+        
         return super().form_invalid(form)
 
 class ClientDashboardView(ClientRequiredMixin, TemplateView):
