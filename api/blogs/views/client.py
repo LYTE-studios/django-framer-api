@@ -26,7 +26,16 @@ class OnboardingRequiredMixin(LoginRequiredMixin):
         
         # Check if onboarding is completed
         onboarding_url = resolve_url('client:onboarding')
-        if not request.user.client.completed_onboarding and request.path != onboarding_url:
+        client = request.user.client
+        client.refresh_from_db()  # Ensure we have latest data
+        
+        logger.info(f"Checking onboarding status for user {request.user.email}")
+        logger.info(f"Current path: {request.path}")
+        logger.info(f"Onboarding URL: {onboarding_url}")
+        logger.info(f"Onboarding completed: {client.completed_onboarding}")
+        
+        if not client.completed_onboarding and request.path != onboarding_url:
+            logger.info("Redirecting to onboarding")
             return redirect('client:onboarding')
             
         # Check subscription status
@@ -123,10 +132,14 @@ Generate blog posts that:
 3. Showcase our expertise and knowledge
 4. Use a professional and engaging tone
 """
+                # Set and verify onboarding completion
                 client.completed_onboarding = True
                 client.save()
+                client.refresh_from_db()  # Reload from database to verify
                 
                 logger.info(f"Onboarding completed successfully for user {self.request.user.email}")
+                logger.info(f"Onboarding status: {client.completed_onboarding}")
+                logger.info(f"Client data: name={client.name}, gpt_prompt={bool(client.gpt_prompt)}")
                 messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
                 
                 # Redirect to dashboard
