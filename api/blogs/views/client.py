@@ -98,7 +98,49 @@ class OnboardingView(LoginRequiredMixin, FormView):  # Intentionally not using O
     def post(self, request, *args, **kwargs):
         logger.info(f"Received onboarding form POST for user {request.user.email}")
         logger.info(f"POST data: {request.POST}")
-        return super().post(request, *args, **kwargs)
+        
+        form = self.get_form()
+        if form.is_valid():
+            try:
+                # Get or create client
+                client, created = Client.objects.get_or_create(
+                    user=self.request.user,
+                    defaults={'name': form.cleaned_data['name']}
+                )
+                
+                # Update client data
+                client.name = form.cleaned_data['name']
+                
+                # Create GPT prompt from form data
+                description = form.cleaned_data['description']
+                industry = form.cleaned_data['industry']
+                client.gpt_prompt = f"""Industry: {industry}
+Business Description: {description}
+
+Generate blog posts that:
+1. Are relevant to our industry and business focus
+2. Provide value to our target audience
+3. Showcase our expertise and knowledge
+4. Use a professional and engaging tone
+"""
+                client.completed_onboarding = True
+                client.save()
+                
+                logger.info(f"Onboarding completed successfully for user {self.request.user.email}")
+                messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
+                
+                # Redirect to dashboard
+                from django.shortcuts import redirect
+                return redirect('client:dashboard')
+                
+            except Exception as e:
+                logger.error(f"Error during onboarding: {str(e)}")
+                logger.exception("Full traceback:")
+                messages.error(self.request, "An error occurred while saving your settings. Please try again.")
+                return self.form_invalid(form)
+        else:
+            logger.warning(f"Form errors: {form.errors}")
+            return self.form_invalid(form)
 
     def form_valid(self, form):
         try:
