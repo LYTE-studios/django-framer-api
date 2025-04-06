@@ -39,7 +39,7 @@
                 <div class="hidden md:block">
                     <div class="ml-4 flex items-center md:ml-6">
                         <a href="{% url 'client:profile' %}" class="text-sm font-medium">{{ request.user.email }}</a>
-                        <form method="post" action="{% url 'logout' %}" class="ml-4">
+                        <form method="post" action="{% url 'client:logout' %}" class="ml-4">
                             {% csrf_token %}
                             <button type="submit" class="text-sm font-medium text-gray-300 hover:text-white">Logout</button>
                         </form>
