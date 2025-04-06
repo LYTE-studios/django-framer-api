@@ -25,6 +25,25 @@ class OnboardingMiddleware:
                 'media'
             ]
             
+            # Skip check for onboarding page and static files
+            skip_urls = [
+                'onboarding',
+                'logout',
+                'login',
+                'register',
+                'password_reset',
+                'password_reset_done',
+                'password_reset_confirm',
+                'password_reset_complete',
+                'static',
+                'media'
+            ]
+            
+            # Don't check onboarding status on onboarding page
+            if current_url == 'onboarding':
+                return self.get_response(request)
+                
+            # Skip check for certain URLs
             if current_url not in skip_urls:
                 if hasattr(request.user, 'client'):
                     client = request.user.client
