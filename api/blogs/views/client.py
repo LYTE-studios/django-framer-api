@@ -11,9 +11,8 @@ import logging
 from ..models import Client, BlogPost, Subscription
 
 logger = logging.getLogger(__name__)
-
-class OnboardingRequiredMixin(LoginRequiredMixin):
-    """Verify that the user has completed onboarding"""
+class ClientRequiredMixin(LoginRequiredMixin):
+    """Verify that the current user has an associated client"""
     def dispatch(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return self.handle_no_permission()
@@ -24,111 +23,46 @@ class OnboardingRequiredMixin(LoginRequiredMixin):
                 user=request.user,
                 name=f"{request.user.email}'s Blog"  # Default name
             )
-        
-        # Check if onboarding is completed
-        onboarding_url = reverse('client:onboarding')
-        client = request.user.client
-        client.refresh_from_db()  # Ensure we have latest data
-        
-        logger.info(f"Checking onboarding status for user {request.user.email}")
-        logger.info(f"Current path: {request.path}")
-        logger.info(f"Onboarding URL: {onboarding_url}")
-        logger.info(f"Onboarding completed: {client.completed_onboarding}")
-        
-        # Resolve the current URL to compare with onboarding URL
-        current_url = resolve(request.path).url_name
-        logger.info(f"Current URL name: {current_url}")
-        
-        if not client.completed_onboarding and current_url != 'onboarding':
-            logger.info("Redirecting to onboarding")
-            return HttpResponseRedirect(onboarding_url)
             
         # Check subscription status
         if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
             return redirect('client:settings')
             
         return super().dispatch(request, *args, **kwargs)
-
-class ClientRequiredMixin(OnboardingRequiredMixin):
-    """Legacy mixin name for backward compatibility"""
     pass
 
 from django import forms
 
-class OnboardingForm(forms.Form):
-    name = forms.CharField(
-        widget=forms.TextInput(attrs={
-            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
-            'placeholder': 'e.g., Acme Corporation'
-        }),
-        required=True
-    )
-    description = forms.CharField(
-        widget=forms.Textarea(attrs={
-            'rows': 4,
-            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
-            'placeholder': 'e.g., We are a software development company specializing in mobile apps and web applications...'
-        }),
-        required=True
-    )
-    industry = forms.CharField(
-        widget=forms.TextInput(attrs={
-            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
-            'placeholder': 'e.g., Technology, Healthcare, Education'
-        }),
-        required=True
-    )
+from django.views import View
+from django.shortcuts import render
 
-    def clean(self):
-        cleaned_data = super().clean()
-        logger.info(f"Form cleaning data: {cleaned_data}")
-        
-        # Ensure all required fields are present
-        required_fields = ['name', 'description', 'industry']
-        for field in required_fields:
-            if not cleaned_data.get(field):
-                logger.warning(f"Missing required field: {field}")
-                self.add_error(field, 'This field is required.')
-        
-        return cleaned_data
-        
-    def save(self, commit=True):
-        logger.info("Saving form data")
-        # We don't need to save description and industry directly as they're used to create gpt_prompt
-        return super().save(commit)
-
-class OnboardingView(LoginRequiredMixin, FormView):  # Intentionally not using OnboardingRequiredMixin
+class OnboardingView(LoginRequiredMixin, UpdateView):
     template_name = 'client/onboarding.html'
-    form_class = OnboardingForm
+    model = Client
+    fields = ['name']
     success_url = reverse_lazy('client:dashboard')
 
-    def get_initial(self):
-        initial = super().get_initial()
-        client = getattr(self.request.user, 'client', None)
-        if client:
-            initial['name'] = client.name
-        return initial
-    
-    def post(self, request, *args, **kwargs):
-        logger.info(f"Received onboarding form POST for user {request.user.email}")
-        logger.info(f"POST data: {request.POST}")
-        
-        form = self.get_form()
-        if form.is_valid():
-            try:
-                # Get or create client
-                client, created = Client.objects.get_or_create(
-                    user=self.request.user,
-                    defaults={'name': form.cleaned_data['name']}
-                )
-                
-                # Update client data
-                client.name = form.cleaned_data['name']
-                
-                # Create GPT prompt from form data
-                description = form.cleaned_data['description']
-                industry = form.cleaned_data['industry']
-                client.gpt_prompt = f"""Industry: {industry}
+    def get_object(self):
+        client, created = Client.objects.get_or_create(
+            user=self.request.user,
+            defaults={'name': f"{self.request.user.email}'s Blog"}
+        )
+        return client
+
+    def form_valid(self, form):
+        try:
+            client = form.save(commit=False)
+            
+            # Get additional fields
+            description = self.request.POST.get('description')
+            industry = self.request.POST.get('industry')
+            
+            if not all([description, industry]):
+                messages.error(self.request, "All fields are required.")
+                return self.form_invalid(form)
+            
+            # Set GPT prompt
+            client.gpt_prompt = f"""Industry: {industry}
 Business Description: {description}
 
 Generate blog posts that:
@@ -137,31 +71,20 @@ Generate blog posts that:
 3. Showcase our expertise and knowledge
 4. Use a professional and engaging tone
 """
-                # Set and verify onboarding completion
-                client.completed_onboarding = True
-                client.save()
-                client.refresh_from_db()  # Reload from database to verify
-                
-                logger.info(f"Onboarding completed successfully for user {self.request.user.email}")
-                logger.info(f"Onboarding status: {client.completed_onboarding}")
-                logger.info(f"Client data: name={client.name}, gpt_prompt={bool(client.gpt_prompt)}")
-                messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
-                
-                # Get success URL and verify it exists
-                success_url = reverse('client:dashboard')
-                logger.info(f"Redirecting to: {success_url}")
-                
-                # Use HttpResponseRedirect for proper 302 handling
-                from django.http import HttpResponseRedirect
-                return HttpResponseRedirect(success_url)
-                
-            except Exception as e:
-                logger.error(f"Error during onboarding: {str(e)}")
-                logger.exception("Full traceback:")
-                messages.error(self.request, "An error occurred while saving your settings. Please try again.")
-                return self.form_invalid(form)
-        else:
-            logger.warning(f"Form errors: {form.errors}")
+            client.completed_onboarding = True
+            client.save()
+            
+            # Log the user in again to refresh the session
+            from django.contrib.auth import login
+            login(self.request, self.request.user)
+            
+            messages.success(self.request, "Setup completed successfully!")
+            return super().form_valid(form)
+            
+        except Exception as e:
+            logger.error(f"Error during onboarding: {str(e)}")
+            logger.exception("Full traceback:")
+            messages.error(self.request, "An error occurred. Please try again.")
             return self.form_invalid(form)
 
     def form_valid(self, form):
