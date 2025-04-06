@@ -54,6 +54,9 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# Ensure trailing slashes are not enforced
+APPEND_SLASH = False
+
 CSRF_TRUSTED_ORIGINS = [
     'https://framer-api.lytestudios.be',
 ]
@@ -208,3 +211,7 @@ else:
 
 # Default from email
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@lytestudios.be')
+
+# Authentication settings
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = 'client:login'
