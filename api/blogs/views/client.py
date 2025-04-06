@@ -1,19 +1,14 @@
 from django.views.generic import TemplateView, ListView, DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from ..models import Client, BlogPost, Subscription
 
-class ClientRequiredMixin(LoginRequiredMixin):
-    """Verify that the current user has an associated client and active subscription"""
+class OnboardingRequiredMixin(LoginRequiredMixin):
+    """Verify that the user has completed onboarding"""
     def dispatch(self, request, *args, **kwargs):
-        # Check if user is authenticated (from LoginRequiredMixin)
         if not request.user.is_authenticated:
             return self.handle_no_permission()
-            
-        # Redirect to settings if user has no active subscription
-        if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
-            return redirect('client:settings')
         
         # Create a client if one doesn't exist
         if not hasattr(request.user, 'client'):
@@ -21,8 +16,52 @@ class ClientRequiredMixin(LoginRequiredMixin):
                 user=request.user,
                 name=f"{request.user.email}'s Blog"  # Default name
             )
+        
+        # Check if onboarding is completed
+        if not request.user.client.completed_onboarding and request.path != reverse('client:onboarding'):
+            return redirect('client:onboarding')
             
-        return super(LoginRequiredMixin, self).dispatch(request, *args, **kwargs)
+        # Check subscription status
+        if hasattr(request.user, 'subscription') and not request.user.subscription.is_active():
+            return redirect('client:settings')
+            
+        return super().dispatch(request, *args, **kwargs)
+
+class ClientRequiredMixin(OnboardingRequiredMixin):
+    """Legacy mixin name for backward compatibility"""
+    pass
+
+class OnboardingView(LoginRequiredMixin, UpdateView):
+    template_name = 'client/onboarding.html'
+    model = Client
+    fields = ['name']
+    success_url = reverse_lazy('client:dashboard')
+    
+    def get_object(self):
+        # Get or create client for the current user
+        client, created = Client.objects.get_or_create(
+            user=self.request.user,
+            defaults={'name': f"{self.request.user.email}'s Blog"}
+        )
+        return client
+    
+    def form_valid(self, form):
+        client = form.save(commit=False)
+        # Use the description to create a GPT prompt
+        description = self.request.POST.get('description', '')
+        industry = self.request.POST.get('industry', '')
+        client.gpt_prompt = f"""Industry: {industry}
+Business Description: {description}
+
+Generate blog posts that:
+1. Are relevant to our industry and business focus
+2. Provide value to our target audience
+3. Showcase our expertise and knowledge
+4. Use a professional and engaging tone
+"""
+        client.completed_onboarding = True
+        client.save()
+        return super().form_valid(form)
 
 class ClientDashboardView(ClientRequiredMixin, TemplateView):
     template_name = 'client/dashboard.html'

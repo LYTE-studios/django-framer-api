@@ -69,6 +69,7 @@ class Client(models.Model):
     post_time = models.TimeField(default=timezone.datetime.strptime('09:00', '%H:%M').time(), help_text="Time of day to post (24-hour format)")
     last_post_generated = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
+    completed_onboarding = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     embed_token = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique token for embedding blogs")
