@@ -49,6 +49,26 @@ class OnboardingView(LoginRequiredMixin, UpdateView):
         )
         return client
 
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Add custom fields
+        form.fields['description'] = forms.CharField(
+            widget=forms.Textarea(attrs={
+                'rows': 4,
+                'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+                'placeholder': 'e.g., We are a software development company...'
+            }),
+            required=True
+        )
+        form.fields['industry'] = forms.CharField(
+            widget=forms.TextInput(attrs={
+                'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+                'placeholder': 'e.g., Technology, Healthcare, Education'
+            }),
+            required=True
+        )
+        return form
+
     def form_valid(self, form):
         try:
             client = form.save(commit=False)
@@ -85,45 +105,6 @@ Generate blog posts that:
             logger.error(f"Error during onboarding: {str(e)}")
             logger.exception("Full traceback:")
             messages.error(self.request, "An error occurred. Please try again.")
-            return self.form_invalid(form)
-
-    def form_valid(self, form):
-        try:
-            logger.info(f"Form is valid for user {self.request.user.email}")
-            logger.info(f"Cleaned data: {form.cleaned_data}")
-            
-            # Get or create client
-            client, created = Client.objects.get_or_create(
-                user=self.request.user,
-                defaults={'name': form.cleaned_data['name']}
-            )
-            
-            # Update client data
-            client.name = form.cleaned_data['name']
-            
-            # Create GPT prompt from form data
-            description = form.cleaned_data['description']
-            industry = form.cleaned_data['industry']
-            client.gpt_prompt = f"""Industry: {industry}
-Business Description: {description}
-
-Generate blog posts that:
-1. Are relevant to our industry and business focus
-2. Provide value to our target audience
-3. Showcase our expertise and knowledge
-4. Use a professional and engaging tone
-"""
-            client.completed_onboarding = True
-            client.save()
-            
-            logger.info(f"Onboarding completed successfully for user {self.request.user.email}")
-            messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
-            return super().form_valid(form)
-            
-        except Exception as e:
-            logger.error(f"Error during onboarding for user {self.request.user.email}: {str(e)}")
-            logger.exception("Full traceback:")
-            messages.error(self.request, "An error occurred while saving your settings. Please try again.")
             return self.form_invalid(form)
 
     def form_invalid(self, form):
@@ -266,7 +247,7 @@ class ClientTestView(ClientRequiredMixin, TemplateView):
         context['embed_code'] = f'<script>{embed_code}</script>'
         return context
 
-class ClientSubscriptionView(OnboardingRequiredMixin, TemplateView):
+class ClientSubscriptionView(ClientRequiredMixin, TemplateView):
     template_name = 'client/subscription.html'
     
     def get_context_data(self, **kwargs):
