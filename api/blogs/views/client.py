@@ -6,7 +6,10 @@ from django.shortcuts import redirect, resolve_url
 from django.utils import timezone
 from django.contrib import messages
 import stripe
+import logging
 from ..models import Client, BlogPost, Subscription
+
+logger = logging.getLogger(__name__)
 
 class OnboardingRequiredMixin(LoginRequiredMixin):
     """Verify that the user has completed onboarding"""
@@ -39,12 +42,31 @@ class ClientRequiredMixin(OnboardingRequiredMixin):
 from django import forms
 
 class OnboardingForm(forms.ModelForm):
-    description = forms.CharField(widget=forms.Textarea, required=True)
-    industry = forms.CharField(required=True)
+    description = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'rows': 4,
+            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+            'placeholder': 'e.g., We are a software development company specializing in mobile apps and web applications...'
+        }),
+        required=True
+    )
+    industry = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+            'placeholder': 'e.g., Technology, Healthcare, Education'
+        }),
+        required=True
+    )
 
     class Meta:
         model = Client
         fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+                'placeholder': 'e.g., Acme Corporation'
+            })
+        }
 
 class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using OnboardingRequiredMixin
     template_name = 'client/onboarding.html'
@@ -61,11 +83,14 @@ class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using
         return client
     
     def form_valid(self, form):
-        client = form.save(commit=False)
-        # Use the description to create a GPT prompt
-        description = form.cleaned_data['description']
-        industry = form.cleaned_data['industry']
-        client.gpt_prompt = f"""Industry: {industry}
+        try:
+            logger.info(f"Processing onboarding form for user {self.request.user.email}")
+            client = form.save(commit=False)
+            
+            # Use the description to create a GPT prompt
+            description = form.cleaned_data['description']
+            industry = form.cleaned_data['industry']
+            client.gpt_prompt = f"""Industry: {industry}
 Business Description: {description}
 
 Generate blog posts that:
@@ -74,13 +99,23 @@ Generate blog posts that:
 3. Showcase our expertise and knowledge
 4. Use a professional and engaging tone
 """
-        client.completed_onboarding = True
-        client.save()
-        messages.success(self.request, "Setup completed successfully!")
-        return super().form_valid(form)
+            client.completed_onboarding = True
+            client.save()
+            
+            logger.info(f"Onboarding completed successfully for user {self.request.user.email}")
+            messages.success(self.request, "Setup completed successfully! Redirecting to dashboard...")
+            return super().form_valid(form)
+            
+        except Exception as e:
+            logger.error(f"Error during onboarding for user {self.request.user.email}: {str(e)}")
+            messages.error(self.request, "An error occurred while saving your settings. Please try again.")
+            return self.form_invalid(form)
 
     def form_invalid(self, form):
-        messages.error(self.request, "Please fill in all required fields.")
+        logger.warning(f"Invalid onboarding form for user {self.request.user.email}. Errors: {form.errors}")
+        for field, errors in form.errors.items():
+            for error in errors:
+                messages.error(self.request, f"{field}: {error}")
         return super().form_invalid(form)
 
 class ClientDashboardView(ClientRequiredMixin, TemplateView):
