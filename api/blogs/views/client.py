@@ -1,7 +1,8 @@
 from django.views.generic import TemplateView, ListView, DetailView, UpdateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
-from django.urls import reverse_lazy, reverse
+from django.urls import reverse_lazy, reverse, resolve
+from django.shortcuts import redirect, resolve_url
 from ..models import Client, BlogPost, Subscription
 
 class OnboardingRequiredMixin(LoginRequiredMixin):
@@ -18,7 +19,8 @@ class OnboardingRequiredMixin(LoginRequiredMixin):
             )
         
         # Check if onboarding is completed
-        if not request.user.client.completed_onboarding and request.path != reverse('client:onboarding'):
+        onboarding_url = resolve_url('client:onboarding')
+        if not request.user.client.completed_onboarding and request.path != onboarding_url:
             return redirect('client:onboarding')
             
         # Check subscription status
@@ -31,7 +33,7 @@ class ClientRequiredMixin(OnboardingRequiredMixin):
     """Legacy mixin name for backward compatibility"""
     pass
 
-class OnboardingView(LoginRequiredMixin, UpdateView):
+class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using OnboardingRequiredMixin
     template_name = 'client/onboarding.html'
     model = Client
     fields = ['name']
@@ -138,7 +140,7 @@ class ClientTestView(ClientRequiredMixin, TemplateView):
         context['embed_code'] = f'<script>{embed_code}</script>'
         return context
 
-class ClientSubscriptionView(LoginRequiredMixin, TemplateView):
+class ClientSubscriptionView(OnboardingRequiredMixin, TemplateView):
     template_name = 'client/subscription.html'
     
     def get_context_data(self, **kwargs):
