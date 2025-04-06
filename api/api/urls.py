@@ -9,8 +9,8 @@ from django.urls import path, include
 
 urlpatterns = [
     # Client portal URLs - accessible at both root and /client/
-    path('', include('blogs.urls.client')),
-    path('client/', include('blogs.urls.client')),
+    path('', include('blogs.urls.client', namespace='client')),
+    path('client/', include('blogs.urls.client', namespace='client')),
     
     # API URLs
     path('api/', include('blogs.urls.api')),

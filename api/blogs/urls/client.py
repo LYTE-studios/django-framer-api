@@ -5,6 +5,8 @@ from blogs.views.auth import *
 from blogs.forms import EmailAuthenticationForm
 from django.contrib.auth import views as auth_views
 
+app_name = 'client'
+
 urlpatterns = [
 # Blog Posts
     path ('', ClientDashboardView.as_view(), name='dashboard'),
