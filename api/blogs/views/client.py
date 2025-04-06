@@ -41,7 +41,14 @@ class ClientRequiredMixin(OnboardingRequiredMixin):
 
 from django import forms
 
-class OnboardingForm(forms.ModelForm):
+class OnboardingForm(forms.Form):
+    name = forms.CharField(
+        widget=forms.TextInput(attrs={
+            'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
+            'placeholder': 'e.g., Acme Corporation'
+        }),
+        required=True
+    )
     description = forms.CharField(
         widget=forms.Textarea(attrs={
             'rows': 4,
@@ -58,36 +65,56 @@ class OnboardingForm(forms.ModelForm):
         required=True
     )
 
-    class Meta:
-        model = Client
-        fields = ['name']
-        widgets = {
-            'name': forms.TextInput(attrs={
-                'class': 'shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md',
-                'placeholder': 'e.g., Acme Corporation'
-            })
-        }
+    def clean(self):
+        cleaned_data = super().clean()
+        logger.info(f"Form cleaning data: {cleaned_data}")
+        
+        # Ensure all required fields are present
+        required_fields = ['name', 'description', 'industry']
+        for field in required_fields:
+            if not cleaned_data.get(field):
+                logger.warning(f"Missing required field: {field}")
+                self.add_error(field, 'This field is required.')
+        
+        return cleaned_data
+        
+    def save(self, commit=True):
+        logger.info("Saving form data")
+        # We don't need to save description and industry directly as they're used to create gpt_prompt
+        return super().save(commit)
 
-class OnboardingView(LoginRequiredMixin, UpdateView):  # Intentionally not using OnboardingRequiredMixin
+class OnboardingView(LoginRequiredMixin, FormView):  # Intentionally not using OnboardingRequiredMixin
     template_name = 'client/onboarding.html'
-    model = Client
     form_class = OnboardingForm
     success_url = reverse_lazy('client:dashboard')
+
+    def get_initial(self):
+        initial = super().get_initial()
+        client = getattr(self.request.user, 'client', None)
+        if client:
+            initial['name'] = client.name
+        return initial
     
-    def get_object(self):
-        # Get or create client for the current user
-        client, created = Client.objects.get_or_create(
-            user=self.request.user,
-            defaults={'name': f"{self.request.user.email}'s Blog"}
-        )
-        return client
-    
+    def post(self, request, *args, **kwargs):
+        logger.info(f"Received onboarding form POST for user {request.user.email}")
+        logger.info(f"POST data: {request.POST}")
+        return super().post(request, *args, **kwargs)
+
     def form_valid(self, form):
         try:
-            logger.info(f"Processing onboarding form for user {self.request.user.email}")
-            client = form.save(commit=False)
+            logger.info(f"Form is valid for user {self.request.user.email}")
+            logger.info(f"Cleaned data: {form.cleaned_data}")
             
-            # Use the description to create a GPT prompt
+            # Get or create client
+            client, created = Client.objects.get_or_create(
+                user=self.request.user,
+                defaults={'name': form.cleaned_data['name']}
+            )
+            
+            # Update client data
+            client.name = form.cleaned_data['name']
+            
+            # Create GPT prompt from form data
             description = form.cleaned_data['description']
             industry = form.cleaned_data['industry']
             client.gpt_prompt = f"""Industry: {industry}
@@ -108,11 +135,15 @@ Generate blog posts that:
             
         except Exception as e:
             logger.error(f"Error during onboarding for user {self.request.user.email}: {str(e)}")
+            logger.exception("Full traceback:")
             messages.error(self.request, "An error occurred while saving your settings. Please try again.")
             return self.form_invalid(form)
 
     def form_invalid(self, form):
-        logger.warning(f"Invalid onboarding form for user {self.request.user.email}. Errors: {form.errors}")
+        logger.warning(f"Invalid onboarding form for user {self.request.user.email}")
+        logger.warning(f"Form errors: {form.errors}")
+        logger.warning(f"Form data: {form.data}")
+        
         for field, errors in form.errors.items():
             for error in errors:
                 messages.error(self.request, f"{field}: {error}")
