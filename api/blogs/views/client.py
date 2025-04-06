@@ -3,6 +3,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.shortcuts import redirect
 from django.urls import reverse_lazy, reverse, resolve
 from django.shortcuts import redirect, resolve_url
+from django.utils import timezone
+from django.contrib import messages
+import stripe
 from ..models import Client, BlogPost, Subscription
 
 class OnboardingRequiredMixin(LoginRequiredMixin):
@@ -108,7 +111,11 @@ from django.conf import settings
 class ClientSettingsView(ClientRequiredMixin, UpdateView):
     template_name = 'client/settings.html'
     model = Client
-    fields = ['name', 'tone_of_voice', 'gpt_prompt', 'post_interval_days', 'post_time']
+    fields = [
+        'name', 'tone_of_voice', 'gpt_prompt', 'post_interval_days', 'post_time',
+        'company_name', 'vat_number', 'billing_address_line1', 'billing_address_line2',
+        'billing_city', 'billing_state', 'billing_postal_code', 'billing_country'
+    ]
     success_url = reverse_lazy('client:settings')
     
     def get_object(self):
@@ -118,8 +125,52 @@ class ClientSettingsView(ClientRequiredMixin, UpdateView):
         context = super().get_context_data(**kwargs)
         if hasattr(self.request.user, 'subscription'):
             context['subscription'] = self.request.user.subscription
+            # Get invoices from Stripe if subscription exists
+            if self.request.user.subscription.stripe_customer_id:
+                try:
+                    stripe.api_key = settings.STRIPE_SECRET_KEY
+                    invoices = stripe.Invoice.list(
+                        customer=self.request.user.subscription.stripe_customer_id,
+                        limit=10,
+                        status='paid'  # Only get paid invoices
+                    )
+                    context['invoices'] = [{
+                        'number': invoice.number,
+                        'amount': f"€{invoice.total / 100:.2f}",
+                        'date': timezone.datetime.fromtimestamp(invoice.created),
+                        'url': invoice.invoice_pdf,
+                        'status': invoice.status
+                    } for invoice in invoices.data]
+                except stripe.error.StripeError as e:
+                    messages.error(self.request, "Unable to fetch invoices. Please try again later.")
+                    context['invoices'] = []
+        
         context['stripe_public_key'] = settings.STRIPE_PUBLIC_KEY
         return context
+
+    def form_valid(self, form):
+        """Update Stripe customer billing details when billing info is updated"""
+        response = super().form_valid(form)
+        if hasattr(self.request.user, 'subscription') and self.request.user.subscription.stripe_customer_id:
+            try:
+                stripe.api_key = settings.STRIPE_SECRET_KEY
+                stripe.Customer.modify(
+                    self.request.user.subscription.stripe_customer_id,
+                    name=form.cleaned_data['company_name'],
+                    tax_id_data=[{'type': 'eu_vat', 'value': form.cleaned_data['vat_number']}] if form.cleaned_data['vat_number'] else None,
+                    address={
+                        'line1': form.cleaned_data['billing_address_line1'],
+                        'line2': form.cleaned_data['billing_address_line2'],
+                        'city': form.cleaned_data['billing_city'],
+                        'state': form.cleaned_data['billing_state'],
+                        'postal_code': form.cleaned_data['billing_postal_code'],
+                        'country': form.cleaned_data['billing_country'],
+                    }
+                )
+                messages.success(self.request, "Settings and billing information updated successfully.")
+            except stripe.error.StripeError as e:
+                messages.warning(self.request, "Settings saved but unable to update billing information. Please try again later.")
+        return response
 
 class ClientProfileView(ClientRequiredMixin, UpdateView):
     template_name = 'client/profile.html'

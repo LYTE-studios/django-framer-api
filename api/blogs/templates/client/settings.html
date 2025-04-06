@@ -5,30 +5,33 @@
 {% block header %}Blog Settings{% endblock %}
 
 {% block content %}
-<div class="bg-white shadow overflow-hidden sm:rounded-lg">
-    <form method="post" class="space-y-8 divide-y divide-gray-200">
-        {% csrf_token %}
-        
-        <div class="space-y-8 divide-y divide-gray-200 sm:space-y-5">
-            <div class="space-y-6 sm:space-y-5">
-                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-                    <label for="id_name" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Business Name -->
+                <div>
+                    <label for="id_name" class="block text-sm font-medium text-gray-700">
                         Business Name
                     </label>
-                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                    <div class="mt-1">
                         <input type="text" name="name" id="id_name" value="{{ object.name }}"
-                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Your business name">
                     </div>
                 </div>
 
-                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                <!-- Tone of Voice -->
+                <div>
+                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700">
                         Tone of Voice
                     </label>
-                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                    <div class="mt-1">
                         <select id="id_tone_of_voice" name="tone_of_voice"
-                            class="max-w-lg block focus:ring-primary focus:border-primary w-full shadow-sm sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
-                            <option value="">---------</option>
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                            <option value="">Select a tone of voice</option>
                             {% for tone in form.fields.tone_of_voice.queryset %}
                             <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
                                 {{ tone.name }}
@@ -38,51 +41,225 @@
                     </div>
                 </div>
 
-                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                <!-- Content Guidelines -->
+                <div>
+                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700">
                         Content Guidelines
                     </label>
-                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                    <div class="mt-1">
                         <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
-                            class="max-w-lg shadow-sm block w-full focus:ring-primary focus:border-primary sm:text-sm border-gray-300 rounded-md">{{ object.gpt_prompt }}</textarea>
-                        <p class="mt-2 text-sm text-gray-500">Describe your content preferences, industry focus, and any specific requirements.</p>
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Describe your content preferences, industry focus, and any specific requirements">{{ object.gpt_prompt }}</textarea>
+                        <p class="mt-2 text-sm text-gray-500">This helps us generate content that matches your brand's voice and goals.</p>
                     </div>
                 </div>
 
-                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                <!-- Post Frequency -->
+                <div>
+                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700">
                         Post Frequency (days)
                     </label>
-                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                    <div class="mt-1">
                         <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
                             min="1" max="30"
-                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                         <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated? (1-30 days)</p>
                     </div>
                 </div>
 
-                <div class="sm:grid sm:grid-cols-3 sm:gap-4 sm:items-start sm:pt-5">
-                    <label for="id_post_time" class="block text-sm font-medium text-gray-700 sm:mt-px sm:pt-2">
+                <!-- Post Time -->
+                <div>
+                    <label for="id_post_time" class="block text-sm font-medium text-gray-700">
                         Post Time
                     </label>
-                    <div class="mt-1 sm:mt-0 sm:col-span-2">
+                    <div class="mt-1">
                         <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
-                            class="max-w-lg block w-full shadow-sm focus:ring-primary focus:border-primary sm:max-w-xs sm:text-sm border-gray-300 rounded-md">
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                         <p class="mt-2 text-sm text-gray-500">What time should posts be generated? (24-hour format)</p>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="pt-5">
-            <div class="flex justify-end">
-                <button type="submit"
-                    class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                    Save Changes
-                </button>
+                <!-- Submit Button -->
+                <div class="pt-5">
+                    <button type="submit"
+                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Billing Information -->
+<div class="mt-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Billing Information</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>This information will be used for your invoices.</p>
+            </div>
+            <form method="post" class="mt-5 space-y-6">
+                {% csrf_token %}
+                
+                <!-- Company Name -->
+                <div>
+                    <label for="id_company_name" class="block text-sm font-medium text-gray-700">
+                        Company Name
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Your company's legal name">
+                    </div>
+                </div>
+
+                <!-- VAT Number -->
+                <div>
+                    <label for="id_vat_number" class="block text-sm font-medium text-gray-700">
+                        VAT Number
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="e.g., BE0123456789">
+                    </div>
+                </div>
+
+                <!-- Billing Address -->
+                <div>
+                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-700">
+                        Address Line 1
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="billing_address_line1" id="id_billing_address_line1" value="{{ object.billing_address_line1 }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Street address">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-700">
+                        Address Line 2
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="billing_address_line2" id="id_billing_address_line2" value="{{ object.billing_address_line2 }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                            placeholder="Apartment, suite, etc. (optional)">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-2">
+                        <label for="id_billing_city" class="block text-sm font-medium text-gray-700">
+                            City
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
+                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="id_billing_state" class="block text-sm font-medium text-gray-700">
+                            State / Province
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
+                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-700">
+                            Postal Code
+                        </label>
+                        <div class="mt-1">
+                            <input type="text" name="billing_postal_code" id="id_billing_postal_code" value="{{ object.billing_postal_code }}"
+                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_billing_country" class="block text-sm font-medium text-gray-700">
+                        Country
+                    </label>
+                    <div class="mt-1">
+                        <input type="text" name="billing_country" id="id_billing_country" value="{{ object.billing_country }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit"
+                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        Update Billing Information
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Invoices -->
+<div class="mt-8">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">Invoices</h3>
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>Download your past invoices.</p>
+            </div>
+            <div class="mt-4">
+                {% if invoices %}
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                    <ul role="list" class="divide-y divide-gray-200">
+                        {% for invoice in invoices %}
+                        <li>
+                            <a href="{{ invoice.url }}" class="block hover:bg-gray-50">
+                                <div class="px-4 py-4 sm:px-6">
+                                    <div class="flex items-center justify-between">
+                                        <div class="text-sm font-medium text-primary truncate">
+                                            Invoice #{{ invoice.number }}
+                                        </div>
+                                        <div class="ml-2 flex-shrink-0 flex">
+                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                {{ invoice.amount }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 sm:flex sm:justify-between">
+                                        <div class="sm:flex">
+                                            <p class="flex items-center text-sm text-gray-500">
+                                                {{ invoice.date|date:"F j, Y" }}
+                                            </p>
+                                        </div>
+                                        <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
+                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                            </svg>
+                                            Download PDF
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        {% empty %}
+                        <li class="px-4 py-4 sm:px-6 text-sm text-gray-500 text-center">
+                            No invoices available yet.
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% else %}
+                <div class="text-center py-4 text-sm text-gray-500">
+                    No invoices available yet.
+                </div>
+                {% endif %}
             </div>
         </div>
-    </form>
+    </div>
 </div>
 
 <!-- Subscription Section -->

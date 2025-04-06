@@ -70,6 +70,17 @@ class Client(models.Model):
     last_post_generated = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
     completed_onboarding = models.BooleanField(default=False)
+    
+    # Billing Information
+    company_name = models.CharField(max_length=200, blank=True)
+    vat_number = models.CharField(max_length=50, blank=True)
+    billing_address_line1 = models.CharField(max_length=200, blank=True)
+    billing_address_line2 = models.CharField(max_length=200, blank=True)
+    billing_city = models.CharField(max_length=100, blank=True)
+    billing_state = models.CharField(max_length=100, blank=True)
+    billing_postal_code = models.CharField(max_length=20, blank=True)
+    billing_country = models.CharField(max_length=100, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     embed_token = models.CharField(max_length=100, unique=True, blank=True, null=True, help_text="Unique token for embedding blogs")
