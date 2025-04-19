@@ -107,7 +107,7 @@ class Client(models.Model):
                 return next_date
             else:
                 # If we haven't reached today's post time, schedule for today
-                return  next_date
+                return next_date
 
         # Calculate next post date based on last post
         next_date = self.last_post_generated.date() + timezone.timedelta(days=self.post_interval_days)

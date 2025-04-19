@@ -30,7 +30,7 @@ python manage.py createcachetable
 
 # Collect static files
 echo "Collecting static files..."
-python manage.py collectstatic --noinput
+python manage.py collectstatic
 
 # Execute the command passed to docker
 echo "Starting service..."

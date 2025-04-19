@@ -17,7 +17,7 @@ class RegisterView(CreateView):
         return response
     
     def get_success_url(self):
-        return reverse_lazy('client:onboarding')
+        return reverse_lazy('client:dashboard')
 
 class OnboardingView(LoginRequiredMixin, UpdateView):
     model = Client
