@@ -1,6 +1,6 @@
 {% extends "client/base.html" %}
 
-{% block title %}Blog Posts - LYTE Blog Manager{% endblock %}
+{% block title %}Blog Posts - Blovio{% endblock %}
 
 {% block header %}Blog Posts{% endblock %}
 
@@ -13,7 +13,8 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
                     </div>
                     <div class="ml-5 w-0 flex-1">
@@ -31,33 +32,21 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <div class="ml-5 w-0 flex-1">
-                        <dl>
-                            <dt class="text-sm font-medium text-gray-500 truncate">Published Posts</dt>
-                            <dd class="text-3xl font-semibold text-gray-900">{{ posts.published.count }}</dd>
-                        </dl>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="p-5">
-                <div class="flex items-center">
-                    <div class="flex-shrink-0">
-                        <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                     <div class="ml-5 w-0 flex-1">
                         <dl>
                             <dt class="text-sm font-medium text-gray-500 truncate">Next Post</dt>
                             <dd class="text-lg font-semibold text-gray-900">
-                                {{ request.user.client.get_next_post_datetime|date:"F j" }}
-                                <span class="text-sm text-gray-500">at {{ request.user.client.post_time|time:"g:i A" }}</span>
+                                {% with next_post=next_post_datetime %}
+                                {% if next_post %}
+                                {{ next_post|date:"F j, Y" }} at {{ next_post|time:"g:i A" }}
+                                {% else %}
+                                No posts scheduled
+                                {% endif %}
+                                {% endwith %}
                             </dd>
                         </dl>
                     </div>
@@ -78,7 +67,8 @@
                                 <p class="font-medium text-primary truncate">{{ post.title }}</p>
                                 <p class="ml-1 flex-shrink-0 font-normal text-gray-500">
                                     {% if post.ai_score %}
-                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.ai_score < 25 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    <span
+                                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.ai_score < 25 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                         AI Score: {{ post.ai_score|floatformat:1 }}%
                                     </span>
                                     {% endif %}
@@ -89,7 +79,8 @@
                             </div>
                         </div>
                         <div class="ml-2 flex-shrink-0 flex">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.status == 'published' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.status == 'published' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ post.get_status_display }}
                             </span>
                         </div>
@@ -98,21 +89,27 @@
                         <div class="sm:flex">
                             {% if post.subjects.exists %}
                             <div class="flex items-center text-sm text-gray-500">
-                                <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                                 </svg>
                                 {{ post.subjects.all|join:", " }}
                             </div>
                             {% endif %}
                         </div>
                         <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             {% if post.published_at %}
-                            <p>Published on <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"F j, Y" }}</time></p>
+                            <p>Published on <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{
+                                    post.published_at|date:"F j, Y" }}</time></p>
                             {% else %}
-                            <p>Created on <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"F j, Y" }}</time></p>
+                            <p>Created on <time datetime="{{ post.created_at|date:'Y-m-d' }}">{{ post.created_at|date:"F
+                                    j, Y" }}</time></p>
                             {% endif %}
                         </div>
                     </div>
@@ -131,7 +128,8 @@
     <nav class="border-t border-gray-200 px-4 flex items-center justify-between sm:px-0">
         <div class="-mt-px w-0 flex-1 flex">
             {% if page_obj.has_previous %}
-            <a href="?page={{ page_obj.previous_page_number }}" class="border-t-2 border-transparent pt-4 pr-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            <a href="?page={{ page_obj.previous_page_number }}"
+                class="border-t-2 border-transparent pt-4 pr-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 <svg class="mr-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                 </svg>
@@ -142,15 +140,20 @@
         <div class="hidden md:-mt-px md:flex">
             {% for num in paginator.page_range %}
             {% if page_obj.number == num %}
-            <span class="border-primary text-primary border-t-2 pt-4 px-4 inline-flex items-center text-sm font-medium">{{ num }}</span>
+            <span
+                class="border-primary text-primary border-t-2 pt-4 px-4 inline-flex items-center text-sm font-medium">{{
+                num }}</span>
             {% else %}
-            <a href="?page={{ num }}" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-t-2 pt-4 px-4 inline-flex items-center text-sm font-medium">{{ num }}</a>
+            <a href="?page={{ num }}"
+                class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-t-2 pt-4 px-4 inline-flex items-center text-sm font-medium">{{
+                num }}</a>
             {% endif %}
             {% endfor %}
         </div>
         <div class="-mt-px w-0 flex-1 flex justify-end">
             {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}" class="border-t-2 border-transparent pt-4 pl-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+            <a href="?page={{ page_obj.next_page_number }}"
+                class="border-t-2 border-transparent pt-4 pl-1 inline-flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
                 Next
                 <svg class="ml-3 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

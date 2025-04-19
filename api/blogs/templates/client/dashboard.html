@@ -1,23 +1,28 @@
 {% extends "client/base.html" %}
 
-{% block title %}Dashboard - LYTE Blog Manager{% endblock %}
+{% block title %}Dashboard - Blovio{% endblock %}
 
 {% block header %}Dashboard{% endblock %}
 
 {% block content %}
-{% if request.user.subscription.status == 'trialing' %}
+{% if subscription.status == 'trialing' %}
 <div class="mb-8 bg-yellow-50 border-l-4 border-yellow-400 p-4">
     <div class="flex">
         <div class="flex-shrink-0">
-            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+            <svg class="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                    d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+                    clip-rule="evenodd" />
             </svg>
         </div>
         <div class="ml-3">
             <p class="text-sm text-yellow-700">
-                You are currently on a free trial that expires on {{ request.user.subscription.trial_end|date:"F j, Y" }}.
-                <a href="{% url 'client:settings' %}" class="font-medium underline text-yellow-700 hover:text-yellow-600">
-                    Choose a plan to continue using LYTE after your trial ends.
+                You are currently on a free trial that expires on {{ subscription.trial_end|date:"F j, Y" }}.
+                <!-- Debug info: {{ subscription_debug }} -->
+                <a href="{% url 'client:settings' %}"
+                    class="font-medium underline text-yellow-700 hover:text-yellow-600">
+                    Choose a plan to continue using Blovio after your trial ends.
                 </a>
             </p>
         </div>
@@ -37,14 +42,17 @@
                 <a href="{% url url %}" class="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 group">
                     <div class="flex items-center">
                         <svg class="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd"
+                                d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                                clip-rule="evenodd" />
                         </svg>
                         <span class="ml-2 text-sm text-primary group-hover:text-secondary">
                             {{ item }}
                         </span>
                     </div>
-                    <svg class="h-5 w-5 text-gray-400 group-hover:text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    <svg class="h-5 w-5 text-gray-400 group-hover:text-secondary" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                     </svg>
                 </a>
                 {% endfor %}
@@ -61,7 +69,8 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-primary rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                 </div>
                 <div class="ml-5 w-0 flex-1">
@@ -80,15 +89,16 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-primary rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                     </svg>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Subscription Status</dt>
                         <dd class="text-lg font-semibold text-gray-900">
-                            {{ request.user.subscription.get_status_display }}
-                            <span class="text-sm text-gray-500">({{ request.user.subscription.get_plan_display }})</span>
+                            {{ subscription.get_status_display }}
+                            <span class="text-sm text-gray-500">{{ subscription.get_plan_display }}</span>
                         </dd>
                     </dl>
                 </div>
@@ -102,15 +112,21 @@
             <div class="flex items-center">
                 <div class="flex-shrink-0 bg-primary rounded-md p-3">
                     <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                 </div>
                 <div class="ml-5 w-0 flex-1">
                     <dl>
                         <dt class="text-sm font-medium text-gray-500 truncate">Next Post Scheduled</dt>
                         <dd class="text-lg font-semibold text-gray-900">
-                            {{ request.user.client.get_next_post_datetime|date:"F j, Y" }}
-                            <span class="text-sm text-gray-500">at {{ request.user.client.post_time|time:"g:i A" }}</span>
+                            {% with next_post=next_post_datetime %}
+                            {% if next_post %}
+                            {{ next_post|date:"F j, Y" }} at {{ next_post|time:"g:i A" }}
+                            {% else %}
+                            No posts scheduled
+                            {% endif %}
+                            {% endwith %}
                         </dd>
                     </dl>
                 </div>
@@ -133,7 +149,8 @@
                                 <p class="font-medium text-primary truncate">{{ post.title }}</p>
                                 <p class="ml-1 flex-shrink-0 font-normal text-gray-500">
                                     {% if post.ai_score %}
-                                    <span class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.ai_score < 25 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    <span
+                                        class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.ai_score < 25 %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
                                         AI Score: {{ post.ai_score|floatformat:1 }}%
                                     </span>
                                     {% endif %}
@@ -141,7 +158,8 @@
                             </div>
                         </div>
                         <div class="ml-2 flex-shrink-0 flex">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.status == 'published' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            <span
+                                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if post.status == 'published' %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %}">
                                 {{ post.get_status_display }}
                             </span>
                         </div>
@@ -153,11 +171,14 @@
                             </p>
                         </div>
                         <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <p>
-                                Published on <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{ post.published_at|date:"F j, Y" }}</time>
+                                Published on <time datetime="{{ post.published_at|date:'Y-m-d' }}">{{
+                                    post.published_at|date:"F j, Y" }}</time>
                             </p>
                         </div>
                     </div>
@@ -174,13 +195,15 @@
 
 <!-- Quick Actions -->
 <div class="mt-8 flex justify-end space-x-4">
-    <a href="{% url 'client:new-post' %}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+    <a href="{% url 'client:new-post' %}"
+        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
         <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
         </svg>
         Create New Post
     </a>
-    <a href="{% url 'client:posts' %}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+    <a href="{% url 'client:posts' %}"
+        class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
         View All Posts
     </a>
 </div>

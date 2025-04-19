@@ -2,7 +2,7 @@
 
 # Function to display help message
 show_help() {
-    echo "LYTE Development Script"
+    echo "Blovio Development Script"
     echo
     echo "Usage: ./dev.sh [command]"
     echo

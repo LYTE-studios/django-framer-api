@@ -1,6 +1,6 @@
-# LYTE Blog Embed System
+# Blovio Blog Embed System
 
-A lightweight, customizable blog embed system that allows you to display your LYTE-generated blog posts on any website.
+A lightweight, customizable blog embed system that allows you to display your Blovio-generated blog posts on any website.
 
 ## Features
 

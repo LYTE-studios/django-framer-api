@@ -39,9 +39,8 @@ class Subscription(models.Model):
     ]
 
     SUBSCRIPTION_PLANS = [
-        ('basic', 'Basic'),
-        ('pro', 'Professional'),
-        ('enterprise', 'Enterprise'),
+        ('monthly', 'Monthly'),
+        ('annual', 'Annual'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
@@ -54,6 +53,12 @@ class Subscription(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def get_status_display(self): 
+        return self.status.capitalize()
+    
+    def get_plan_display(self): 
+        return self.plan.capitalize()
+
     def is_active(self):
         return self.status in ['active', 'trialing'] and (
             self.status == 'active' or 
@@ -64,7 +69,9 @@ class Client(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client', null=True, blank=True)  # Making it nullable initially
     name = models.CharField(max_length=200)
     tone_of_voice = models.ForeignKey(ToneOfVoice, on_delete=models.SET_NULL, null=True, related_name='clients')
-    gpt_prompt = models.TextField(help_text="Description of the client's needs and industry-specific requirements")
+    industry = models.CharField(max_length=200, null=True, blank=True, help_text="The industry your business operates in")
+    business_description = models.TextField(null=True, blank=True, help_text="A detailed description of your business, products, and services")
+    content_preferences = models.TextField(null=True, blank=True, help_text="The type of blog posts you want to generate")
     post_interval_days = models.IntegerField(default=1, help_text="Days between each blog post generation")
     post_time = models.TimeField(default=timezone.datetime.strptime('09:00', '%H:%M').time(), help_text="Time of day to post (24-hour format)")
     last_post_generated = models.DateTimeField(null=True, blank=True)
@@ -89,17 +96,21 @@ class Client(models.Model):
 
     def get_next_post_datetime(self):
         """Get the next scheduled post datetime"""
+
         if not self.last_post_generated:
-            current_time = timezone.localtime(timezone.now())
-            if current_time.time() >= self.post_time:
+            next_date = timezone.make_aware(timezone.datetime.combine(timezone.now().date(), self.post_time))
+
+            if timezone.now() >= next_date:
                 # If we're past today's post time, schedule for tomorrow
-                next_date = current_time.date() + timezone.timedelta(days=1)
+                next_date = next_date + timezone.timedelta(days=1)
+
+                return next_date
             else:
                 # If we haven't reached today's post time, schedule for today
-                next_date = current_time.date()
-        else:
-            # Calculate next post date based on last post
-            next_date = self.last_post_generated.date() + timezone.timedelta(days=self.post_interval_days)
+                return  next_date
+
+        # Calculate next post date based on last post
+        next_date = self.last_post_generated.date() + timezone.timedelta(days=self.post_interval_days)
         
         # Combine the date with the scheduled post time
         return timezone.make_aware(timezone.datetime.combine(next_date, self.post_time))

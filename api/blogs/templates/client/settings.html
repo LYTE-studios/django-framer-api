@@ -1,76 +1,85 @@
 {% extends "client/base.html" %}
 
-{% block title %}Settings - LYTE Blog Manager{% endblock %}
-
-{% block header %}Blog Settings{% endblock %}
+{% block title %}Settings - Blovio{% endblock %}
 
 {% block content %}
-<div class="max-w-3xl mx-auto">
-    <div class="mb-12">
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">Blog Settings</h2>
-        <p class="text-sm text-gray-500 mb-8">Configure your blog's content generation settings and preferences.</p>
-        
-        <form method="post">
-            {% csrf_token %}
-            
-            <!-- Business Name -->
-            <div class="mb-8">
-                <label for="id_name" class="block text-sm font-medium text-gray-900 mb-2">
-                    Business Name
-                </label>
-                <input type="text" name="name" id="id_name" value="{{ object.name }}"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                    placeholder="Your business name">
-            </div>
+<div class="min-h-screen bg-gray-50/50">
+    <div class="max-w-3xl mx-auto space-y-6 py-12">
+        <!-- Blog Settings Section -->
+        <div class="bg-white shadow-lg rounded-xl p-10 pb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Content Settings</h2>
+            <p class="text-sm text-gray-500 mb-8">These settings will be used to generate your blog posts.</p>
 
-                <!-- Tone of Voice -->
-                <div class="mb-8">
-                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-900 mb-2">
-                        Tone of Voice
+            <form method="post" class="space-y-10">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="content_settings">
+
+                <!-- Business Name -->
+                <div>
+                    <label for="id_name" class="block text-sm font-medium text-gray-900 mb-2">
+                        Business Name
                     </label>
-                    <select id="id_tone_of_voice" name="tone_of_voice"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm text-gray-900">
-                        <option value="" class="text-gray-400">Select a tone of voice</option>
-                        {% for tone in form.fields.tone_of_voice.queryset %}
-                        <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
-                            {{ tone.name }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <input type="text" name="name" id="id_name" value="{{ object.name }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="Your business name">
                 </div>
 
-                <!-- Content Guidelines -->
-                <div class="mb-8">
-                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-900 mb-2">
-                        Content Guidelines
+                <!-- Industry -->
+                <div>
+                    <label for="id_industry" class="block text-sm font-medium text-gray-900 mb-2">
+                        Company Industry
                     </label>
-                    <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                        placeholder="Describe your content preferences, industry focus, and any specific requirements">{{ object.gpt_prompt }}</textarea>
-                    <p class="mt-2 text-sm text-gray-500">This helps us generate content that matches your brand's voice and goals.</p>
+                    <input type="text" id="id_industry" name="industry" value="{{ object.industry|default:'' }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="e.g., Technology, Healthcare, E-commerce">
                 </div>
+
+                <!-- Business Description -->
+                <div>
+                    <label for="id_business_description" class="block text-sm font-medium text-gray-900 mb-2">
+                        Business Description
+                    </label>
+                    <textarea id="id_business_description" name="business_description" rows="4"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="e.g., We are a software company specializing in AI-powered automation tools for small businesses. Our flagship product helps companies streamline their customer support through intelligent chatbots.">{{ object.business_description|default:'' }}</textarea>
+                    <p class="mt-2 text-sm text-gray-500">Provide a detailed description of your business, products, and
+                        services.</p>
+                </div>
+
+                <!-- Content Preferences -->
+                <div>
+                    <label for="id_content_preferences" class="block text-sm font-medium text-gray-900 mb-2">
+                        Content Preferences
+                    </label>
+                    <textarea id="id_content_preferences" name="content_preferences" rows="4"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="e.g., We want blog posts that explain complex AI and automation concepts in simple terms, with practical examples and case studies. Focus on how small businesses can benefit from automation, including ROI calculations and implementation tips.">{{ object.content_preferences|default:'' }}</textarea>
+                    <p class="mt-2 text-sm text-gray-500">Describe the type of blog posts you want, including topics,
+                        style, and specific content requirements.</p>
+                </div>
+
 
                 <!-- Post Frequency -->
-                <div class="mb-8">
-                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-900 mb-2">
-                        Post Frequency (days)
-                    </label>
-                    <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
-                        min="1" max="30"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                        placeholder="1-30 days">
-                    <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated?</p>
-                </div>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="id_post_interval_days" class="block text-sm font-medium text-gray-900 mb-2">
+                            Post Frequency (days)
+                        </label>
+                        <input type="number" name="post_interval_days" id="id_post_interval_days"
+                            value="{{ object.post_interval_days }}" min="1" max="30"
+                            class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                            placeholder="1-30 days">
+                        <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated?</p>
+                    </div>
 
-                <!-- Post Time -->
-                <div class="mb-8">
-                    <label for="id_post_time" class="block text-sm font-medium text-gray-900 mb-2">
-                        Post Time
-                    </label>
-                    <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
-                        class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
-                        placeholder="09:00">
-                    <p class="mt-2 text-sm text-gray-500">What time should posts be generated?</p>
+                    <div>
+                        <label for="id_post_time" class="block text-sm font-medium text-gray-900 mb-2">
+                            Post Time
+                        </label>
+                        <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
+                            class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors">
+                        <p class="mt-2 text-sm text-gray-500">What time should posts be published? (24-hour format)</p>
+                    </div>
                 </div>
 
                 <!-- Submit Button -->
@@ -80,88 +89,92 @@
                 </button>
             </form>
         </div>
-    </div>
-</div>
 
-<div class="mb-12">
-    <h2 class="text-xl font-semibold text-gray-900 mb-2">Billing Information</h2>
-    <p class="text-sm text-gray-500 mb-8">This information will be used for your invoices.</p>
-    
-    <form method="post">
-        {% csrf_token %}
-        
-        <!-- Company Name -->
-        <div class="mb-8">
-            <label for="id_company_name" class="block text-sm font-medium text-gray-900 mb-2">
-                Company Name
-            </label>
-            <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                placeholder="Your company's legal name">
-        </div>
+        <!-- Billing Information Section -->
+        <div class="bg-white shadow-lg rounded-xl p-10 pb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Billing Information</h2>
+            <p class="text-sm text-gray-500 mb-8">This information will be used for your invoices.</p>
 
-        <!-- VAT Number -->
-        <div class="mb-8">
-            <label for="id_vat_number" class="block text-sm font-medium text-gray-900 mb-2">
-                VAT Number
-            </label>
-            <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                placeholder="e.g., BE0123456789">
-        </div>
+            <form method="post" class="space-y-10">
+                {% csrf_token %}
+                <input type="hidden" name="form_type" value="billing_info">
 
-        <!-- Billing Address -->
-        <div class="mb-8">
-            <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-900 mb-2">
-                Address Line 1
-            </label>
-            <input type="text" name="billing_address_line1" id="id_billing_address_line1" value="{{ object.billing_address_line1 }}"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                placeholder="Street address">
-        </div>
+                <!-- Company Name -->
+                <div>
+                    <label for="id_company_name" class="block text-sm font-medium text-gray-900 mb-2">
+                        Company Name
+                    </label>
+                    <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="Your company's legal name">
+                </div>
 
-        <div class="mb-8">
-            <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-900 mb-2">
-                Address Line 2
-            </label>
-            <input type="text" name="billing_address_line2" id="id_billing_address_line2" value="{{ object.billing_address_line2 }}"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400"
-                placeholder="Apartment, suite, etc. (optional)">
-        </div>
+                <!-- VAT Number -->
+                <div>
+                    <label for="id_vat_number" class="block text-sm font-medium text-gray-900 mb-2">
+                        VAT Number
+                    </label>
+                    <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="e.g., BE0123456789">
+                </div>
 
-        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
-            <div>
-                <label for="id_billing_city" class="block text-sm font-medium text-gray-900 mb-2">
-                    City
-                </label>
-                <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400">
-            </div>
+                <!-- Billing Address -->
+                <div>
+                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-900 mb-2">
+                        Address Line 1
+                    </label>
+                    <input type="text" name="billing_address_line1" id="id_billing_address_line1"
+                        value="{{ object.billing_address_line1 }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="Street address">
+                </div>
 
-            <div>
-                <label for="id_billing_state" class="block text-sm font-medium text-gray-900 mb-2">
-                    State / Province
-                </label>
-                <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400">
-            </div>
+                <div>
+                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-900 mb-2">
+                        Address Line 2
+                    </label>
+                    <input type="text" name="billing_address_line2" id="id_billing_address_line2"
+                        value="{{ object.billing_address_line2 }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors"
+                        placeholder="Apartment, suite, etc. (optional)">
+                </div>
 
-            <div>
-                <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-900 mb-2">
-                    Postal Code
-                </label>
-                <input type="text" name="billing_postal_code" id="id_billing_postal_code" value="{{ object.billing_postal_code }}"
-                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400">
-            </div>
-        </div>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    <div>
+                        <label for="id_billing_city" class="block text-sm font-medium text-gray-900 mb-2">
+                            City
+                        </label>
+                        <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
+                            class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors">
+                    </div>
 
-        <div class="mb-8">
-            <label for="id_billing_country" class="block text-sm font-medium text-gray-900 mb-2">
-                Country
-            </label>
-            <input type="text" name="billing_country" id="id_billing_country" value="{{ object.billing_country }}"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm placeholder-gray-400">
-        </div>
+                    <div>
+                        <label for="id_billing_state" class="block text-sm font-medium text-gray-900 mb-2">
+                            State / Province
+                        </label>
+                        <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
+                            class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors">
+                    </div>
+
+                    <div>
+                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-900 mb-2">
+                            Postal Code
+                        </label>
+                        <input type="text" name="billing_postal_code" id="id_billing_postal_code"
+                            value="{{ object.billing_postal_code }}"
+                            class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="id_billing_country" class="block text-sm font-medium text-gray-900 mb-2">
+                        Country
+                    </label>
+                    <input type="text" name="billing_country" id="id_billing_country"
+                        value="{{ object.billing_country }}"
+                        class="block w-full rounded-lg border border-teal-700/20 bg-gray-50/50 shadow-sm px-4 py-3 focus:border-teal-700 focus:ring-teal-700 sm:text-sm placeholder-gray-400 hover:border-teal-700/40 transition-colors">
+                </div>
 
                 <!-- Submit Button -->
                 <button type="submit"
@@ -170,13 +183,14 @@
                 </button>
             </form>
         </div>
-    </div>
-</div>
+        <!-- Invoices Section -->
+        <div class="bg-white shadow-lg rounded-xl p-10 pb-6">
 
-{% include "client/includes/section.html" with title="Invoices" description="Download your past invoices." %}
-    <div>
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Invoices</h2>
+            <p class="text-sm text-gray-500 mb-8">Download your past invoices.</p>
+            <div>
                 {% if invoices %}
-                <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+                <div class="rounded-xl overflow-hidden border border-gray-200 divide-y divide-gray-100">
                     <ul role="list" class="divide-y divide-gray-100">
                         {% for invoice in invoices %}
                         <li>
@@ -188,7 +202,8 @@
                                         </div>
                                         <div class="flex items-center gap-4">
                                             <span class="text-sm text-gray-500">{{ invoice.date|date:"F j, Y" }}</span>
-                                            <span class="px-2.5 py-0.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-full">
+                                            <span
+                                                class="px-2.5 py-0.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-full">
                                                 {{ invoice.amount }}
                                             </span>
                                         </div>
@@ -210,13 +225,14 @@
                 {% endif %}
             </div>
         </div>
-    </div>
-</div>
+        <!-- Subscription Management Section -->
+        <div class="bg-white shadow-lg rounded-xl p-10 pb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Subscription Management</h2>
+            <p class="text-sm text-gray-500 mb-8">Manage your subscription plan and billing details.</p>
 
-{% include "client/includes/section.html" with title="Subscription Management" description="Manage your subscription plan and billing details." %}
-    <!-- Current Subscription Status -->
+            <!-- Current Subscription Status -->
             {% if subscription %}
-            <div class="bg-white shadow-sm rounded-lg p-6 mb-8">
+            <div class="border border-gray-200 rounded-lg p-6 mb-8">
                 <h3 class="text-lg font-medium text-gray-900 mb-4">Current Plan</h3>
                 <div class="space-y-4">
                     <div class="flex items-center justify-between">
@@ -251,260 +267,244 @@
             <!-- Available Plans -->
             <div>
                 <h3 class="text-lg font-medium text-gray-900 mb-6">Available Plans</h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                    <!-- Basic Plan -->
-                    <div class="relative rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm hover:border-gray-300">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <!-- Monthly Plan -->
+                    <div
+                        class="relative rounded-xl border border-gray-200 bg-white px-8 py-6 shadow-sm hover:border-gray-300 hover:shadow-md transition-all">
                         <div class="space-y-4">
-                            <h4 class="text-lg font-semibold text-gray-900">Basic</h4>
+                            <h4 class="text-lg font-semibold text-gray-900">Monthly Plan</h4>
                             <div class="flex items-baseline">
-                                <span class="text-3xl font-bold tracking-tight text-gray-900">$29</span>
+                                <span class="text-3xl font-bold tracking-tight text-gray-900">€35</span>
                                 <span class="text-sm font-semibold text-gray-500">/month</span>
                             </div>
                             <ul class="space-y-3">
                                 <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Weekly blog posts</span>
+                                    <span class="ml-2 text-sm text-gray-500">Monthly billing</span>
                                 </li>
                                 <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Basic analytics</span>
+                                    <span class="ml-2 text-sm text-gray-500">All features included</span>
                                 </li>
                             </ul>
-                            <button type="button" data-plan="basic"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
-                                Select Plan
+                            <button type="button" data-plan="monthly"
+                                class="select-plan mt-6 w-full rounded-lg border border-transparent bg-teal-700 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-teal-800 hover:shadow-md transition-all">
+                                Select Monthly Plan
                             </button>
                         </div>
                     </div>
 
-                    <!-- Professional Plan -->
-                    <div class="relative rounded-lg border-2 border-teal-700 bg-white px-6 py-5 shadow-sm">
+                    <!-- Annual Plan -->
+                    <div class="relative rounded-xl border-2 border-teal-700 bg-white px-8 py-6 shadow-md">
                         <div class="absolute -top-2 -right-2">
-                            <span class="inline-flex items-center rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-medium text-white">
-                                Popular
+                            <span
+                                class="inline-flex items-center rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-medium text-white">
+                                Save 10%
                             </span>
                         </div>
                         <div class="space-y-4">
-                            <h4 class="text-lg font-semibold text-gray-900">Professional</h4>
+                            <h4 class="text-lg font-semibold text-gray-900">Annual Plan</h4>
                             <div class="flex items-baseline">
-                                <span class="text-3xl font-bold tracking-tight text-gray-900">$79</span>
-                                <span class="text-sm font-semibold text-gray-500">/month</span>
+                                <span class="text-3xl font-bold tracking-tight text-gray-900">€380</span>
+                                <span class="text-sm font-semibold text-gray-500">/year</span>
                             </div>
                             <ul class="space-y-3">
                                 <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Daily blog posts</span>
+                                    <span class="ml-2 text-sm text-gray-500">Annual billing</span>
                                 </li>
                                 <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Advanced analytics</span>
+                                    <span class="ml-2 text-sm text-gray-500">All features included</span>
                                 </li>
                                 <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Priority support</span>
+                                    <span class="ml-2 text-sm text-gray-500">Save €40 compared to monthly</span>
                                 </li>
                             </ul>
-                            <button type="button" data-plan="pro"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
-                                Select Plan
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Enterprise Plan -->
-                    <div class="relative rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm hover:border-gray-300">
-                        <div class="space-y-4">
-                            <h4 class="text-lg font-semibold text-gray-900">Enterprise</h4>
-                            <div class="flex items-baseline">
-                                <span class="text-3xl font-bold tracking-tight text-gray-900">$199</span>
-                                <span class="text-sm font-semibold text-gray-500">/month</span>
-                            </div>
-                            <ul class="space-y-3">
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Custom post frequency</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Dedicated support</span>
-                                </li>
-                                <li class="flex items-start">
-                                    <svg class="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    <span class="ml-2 text-sm text-gray-500">Custom integrations</span>
-                                </li>
-                            </ul>
-                            <button type="button" data-plan="enterprise"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
-                                Select Plan
+                            <button type="button" data-plan="annual"
+                                class="select-plan mt-6 w-full rounded-lg border border-transparent bg-teal-700 px-6 py-3 text-sm font-medium text-white shadow-sm hover:bg-teal-800 hover:shadow-md transition-all">
+                                Select Annual Plan
                             </button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<!-- Payment Modal -->
-<div id="payment-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-    <div class="bg-white rounded-lg px-4 pt-5 pb-4 overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
-        <div class="sm:flex sm:items-start">
-            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                    Complete Subscription
-                </h3>
-                <div class="mt-2">
-                    <div id="card-element" class="mt-4">
-                        <!-- Stripe Elements will be inserted here -->
+        <!-- Payment Modal -->
+        <div id="payment-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+            <div
+                class="bg-white rounded-xl px-6 pt-6 pb-5 overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full border border-gray-100">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                            Complete Subscription
+                        </h3>
+                        <div class="mt-2">
+                            <div id="card-element" class="mt-4">
+                                <!-- Stripe Elements will be inserted here -->
+                            </div>
+                            <div id="card-errors" class="mt-2 text-red-600 text-sm" role="alert"></div>
+                        </div>
                     </div>
-                    <div id="card-errors" class="mt-2 text-red-600 text-sm" role="alert"></div>
+                </div>
+                <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="submit-payment"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-700 text-base font-medium text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Subscribe
+                    </button>
+                    <button type="button" id="close-modal"
+                        class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">
+                        Cancel
+                    </button>
                 </div>
             </div>
         </div>
-        <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
-            <button type="button" id="submit-payment"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-700 text-base font-medium text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm">
-                Subscribe
-            </button>
-            <button type="button" id="close-modal"
-                class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:mt-0 sm:w-auto sm:text-sm">
-                Cancel
-            </button>
-        </div>
-    </div>
-</div>
 
-{% include "client/includes/section.html" with title="Blog Embed Code" description="Use this code to embed your blog posts on your website. Copy and paste it into your HTML where you want the posts to appear." %}
-    <div class="bg-gray-50 rounded-md p-4">
+        <!-- Blog Embed Section -->
+        <div class="bg-white shadow-lg rounded-xl p-10 pb-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-2">Blog Embed Code</h2>
+            <p class="text-sm text-gray-500 mb-8">Use this code to embed your blog posts on your website. Copy and paste
+                it
+                into
+                your HTML where you want the posts to appear.</p>
+
+            <div class="bg-gray-50/80 rounded-lg p-6 border border-gray-100">
                 <pre class="text-sm text-gray-700 whitespace-pre-wrap break-all">{{ embed_code }}</pre>
             </div>
             <div class="mt-4 flex justify-end">
                 <button type="button" id="copyButton"
-                    class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
+                    class="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-lg text-white bg-teal-700 hover:bg-teal-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-all">
                     Copy to Clipboard
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://js.stripe.com/v3/"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Handle copy to clipboard
-    const copyButton = document.getElementById('copyButton');
-    if (copyButton) {
-        copyButton.addEventListener('click', function() {
-            const embedCode = "{{ embed_code|escapejs }}";
-            navigator.clipboard.writeText(embedCode).then(function() {
-                copyButton.textContent = 'Copied!';
-                setTimeout(function() {
-                    copyButton.textContent = 'Copy to Clipboard';
-                }, 2000);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Handle copy to clipboard
+        const copyButton = document.getElementById('copyButton');
+        if (copyButton) {
+            copyButton.addEventListener('click', function () {
+                const embedCode = "{{ embed_code|escapejs }}";
+                navigator.clipboard.writeText(embedCode).then(function () {
+                    copyButton.textContent = 'Copied!';
+                    setTimeout(function () {
+                        copyButton.textContent = 'Copy to Clipboard';
+                    }, 2000);
+                });
             });
-        });
-    }
-
-    // Handle message fadeout
-    const messages = document.querySelectorAll('[role="alert"]');
-    if (messages.length > 0) {
-        setTimeout(function() {
-            messages.forEach(function(alert) {
-                alert.style.opacity = '0';
-                alert.style.transition = 'opacity 0.5s ease-in-out';
-                setTimeout(function() {
-                    alert.style.display = 'none';
-                }, 500);
-            });
-        }, 5000);
-    }
-
-    // Stripe integration
-    const stripe = Stripe('{{ stripe_public_key }}');
-    const elements = stripe.elements();
-    const card = elements.create('card');
-    const modal = document.getElementById('payment-modal');
-    const cardElement = document.getElementById('card-element');
-    const errorElement = document.getElementById('card-errors');
-    let selectedPlan = null;
-
-    // Mount card element when modal opens
-    document.querySelectorAll('.select-plan').forEach(button => {
-        button.addEventListener('click', function() {
-            selectedPlan = this.dataset.plan;
-            modal.classList.remove('hidden');
-            card.mount('#card-element');
-        });
-    });
-
-    // Close modal
-    document.getElementById('close-modal').addEventListener('click', function() {
-        modal.classList.add('hidden');
-        selectedPlan = null;
-        card.unmount();
-    });
-
-    // Handle card errors
-    card.addEventListener('change', function(event) {
-        if (event.error) {
-            errorElement.textContent = event.error.message;
-        } else {
-            errorElement.textContent = '';
         }
-    });
 
-    // Handle subscription submission
-    document.getElementById('submit-payment').addEventListener('click', async function(event) {
-        event.preventDefault();
-        const submitButton = this;
-        submitButton.disabled = true;
-        submitButton.textContent = 'Processing...';
+        // Handle message fadeout
+        const messages = document.querySelectorAll('[role="alert"]');
+        if (messages.length > 0) {
+            setTimeout(function () {
+                messages.forEach(function (alert) {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.5s ease-in-out';
+                    setTimeout(function () {
+                        alert.style.display = 'none';
+                    }, 500);
+                });
+            }, 5000);
+        }
 
-        try {
-            const {token} = await stripe.createToken(card);
-            const response = await fetch('{% url "client:create_subscription" %}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({
-                    token: token.id,
-                    plan: selectedPlan
-                })
+        // Stripe integration
+        const stripe = Stripe('{{ stripe_public_key }}');
+        const elements = stripe.elements();
+        const card = elements.create('card');
+        const modal = document.getElementById('payment-modal');
+        const cardElement = document.getElementById('card-element');
+        const errorElement = document.getElementById('card-errors');
+        let selectedPlan = null;
+
+        // Mount card element when modal opens
+        document.querySelectorAll('.select-plan').forEach(button => {
+            button.addEventListener('click', function () {
+                selectedPlan = this.dataset.plan;
+                modal.classList.remove('hidden');
+                card.mount('#card-element');
             });
+        });
 
-            const result = await response.json();
-            if (result.error) {
-                throw new Error(result.error);
+        // Close modal
+        document.getElementById('close-modal').addEventListener('click', function () {
+            modal.classList.add('hidden');
+            selectedPlan = null;
+            card.unmount();
+        });
+
+        // Handle card errors
+        card.addEventListener('change', function (event) {
+            if (event.error) {
+                errorElement.textContent = event.error.message;
+            } else {
+                errorElement.textContent = '';
             }
+        });
 
-            // Subscription successful
-            window.location.reload();
-        } catch (error) {
-            errorElement.textContent = error.message;
-            submitButton.disabled = false;
-            submitButton.textContent = 'Subscribe';
-        }
+        // Handle subscription submission
+        document.getElementById('submit-payment').addEventListener('click', async function (event) {
+            event.preventDefault();
+            const submitButton = this;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Processing...';
+
+            try {
+                const { token } = await stripe.createToken(card);
+                const response = await fetch('{% url "client:create_subscription" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        token: token.id,
+                        plan: selectedPlan
+                    })
+                });
+
+                const result = await response.json();
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                // Subscription successful
+                window.location.reload();
+            } catch (error) {
+                errorElement.textContent = error.message;
+                submitButton.disabled = false;
+                submitButton.textContent = 'Subscribe';
+            }
+        });
     });
-});
 </script>
 {% endblock %}
