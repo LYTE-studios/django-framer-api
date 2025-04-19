@@ -1,12 +1,14 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Blovio Blog Manager{% endblock %}</title>
-    <link rel="icon" type="image/svg+xml" href="{% static 'images/blovio-icon.svg' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="{% static 'images/blovio-icon.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -30,11 +32,18 @@
         body {
             font-family: 'Inter', sans-serif;
         }
-        h1, h2, h3, h4, h5, h6 {
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
             font-family: 'Poppins', sans-serif;
         }
     </style>
 </head>
+
 <body class="bg-offwhite text-slate">
     <!-- Navigation -->
     <nav class="bg-primary text-white">
@@ -43,15 +52,21 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <a href="/" class="block">
-                            <img src="{% static 'images/blovio-logo-clear.svg' %}" alt="Blovio" class="h-8">
+                            <img src="{% static 'images/blovio-logo-clear.png' %}" alt="Blovio" class="h-8">
                         </a>
                     </div>
                     <div class="hidden md:block">
                         <div class="ml-10 flex items-baseline space-x-4">
-                            <a href="{% url 'client:dashboard' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'dashboard' %}bg-accent/30{% endif %}">Dashboard</a>
-                            <a href="{% url 'client:posts' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'posts' %}bg-accent/30{% endif %}">Blog Posts</a>
-                            <a href="{% url 'client:test' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'test' %}bg-accent/30{% endif %}">Test View</a>
-                            <a href="{% url 'client:settings' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'settings' %}bg-accent/30{% endif %}">Settings</a>
+                            <a href="{% url 'client:dashboard' %}"
+                                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'dashboard' %}bg-accent/30{% endif %}">Dashboard</a>
+                            <a href="{% url 'client:posts' %}"
+                                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'posts' %}bg-accent/30{% endif %}">Blog
+                                Posts</a>
+                            <a href="{% url 'client:test' %}"
+                                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'test' %}bg-accent/30{% endif %}">Test
+                                View</a>
+                            <a href="{% url 'client:settings' %}"
+                                class="px-3 py-2 rounded-md text-sm font-medium hover:bg-accent/20 {% if request.resolver_match.url_name == 'settings' %}bg-accent/30{% endif %}">Settings</a>
                         </div>
                     </div>
                 </div>
@@ -60,7 +75,8 @@
                         <a href="{% url 'client:profile' %}" class="text-sm font-medium">{{ request.user.email }}</a>
                         <form method="post" action="{% url 'client:logout' %}" class="ml-4">
                             {% csrf_token %}
-                            <button type="submit" class="text-sm font-medium text-accent hover:text-white transition-colors">Logout</button>
+                            <button type="submit"
+                                class="text-sm font-medium text-accent hover:text-white transition-colors">Logout</button>
                         </form>
                     </div>
                 </div>
@@ -81,7 +97,8 @@
         {% if messages %}
         <div class="px-4 sm:px-0">
             {% for message in messages %}
-            <div class="rounded-md p-4 mb-4 {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-accent/10 text-primary{% endif %}">
+            <div
+                class="rounded-md p-4 mb-4 {% if message.tags == 'error' %}bg-red-50 text-red-700{% else %}bg-accent/10 text-primary{% endif %}">
                 {{ message }}
             </div>
             {% endfor %}
@@ -105,4 +122,5 @@
 
     {% block extra_js %}{% endblock %}
 </body>
+
 </html>
