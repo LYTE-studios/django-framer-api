@@ -11,77 +11,67 @@
                 {% csrf_token %}
                 
                 <!-- Business Name -->
-                <div>
-                    <label for="id_name" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_name" class="block text-sm font-medium text-gray-700 mb-1">
                         Business Name
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="name" id="id_name" value="{{ object.name }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="Your business name">
-                    </div>
+                    <input type="text" name="name" id="id_name" value="{{ object.name }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Your business name">
                 </div>
 
                 <!-- Tone of Voice -->
-                <div>
-                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700 mb-1">
                         Tone of Voice
                     </label>
-                    <div class="mt-1">
-                        <select id="id_tone_of_voice" name="tone_of_voice"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                            <option value="">Select a tone of voice</option>
-                            {% for tone in form.fields.tone_of_voice.queryset %}
-                            <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
-                                {{ tone.name }}
-                            </option>
-                            {% endfor %}
-                        </select>
-                    </div>
+                    <select id="id_tone_of_voice" name="tone_of_voice"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        <option value="">Select a tone of voice</option>
+                        {% for tone in form.fields.tone_of_voice.queryset %}
+                        <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
+                            {{ tone.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
                 </div>
 
                 <!-- Content Guidelines -->
-                <div>
-                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700 mb-1">
                         Content Guidelines
                     </label>
-                    <div class="mt-1">
-                        <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="Describe your content preferences, industry focus, and any specific requirements">{{ object.gpt_prompt }}</textarea>
-                        <p class="mt-2 text-sm text-gray-500">This helps us generate content that matches your brand's voice and goals.</p>
-                    </div>
+                    <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Describe your content preferences, industry focus, and any specific requirements">{{ object.gpt_prompt }}</textarea>
+                    <p class="mt-2 text-sm text-gray-500">This helps us generate content that matches your brand's voice and goals.</p>
                 </div>
 
                 <!-- Post Frequency -->
-                <div>
-                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700 mb-1">
                         Post Frequency (days)
                     </label>
-                    <div class="mt-1">
-                        <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
-                            min="1" max="30"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                        <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated? (1-30 days)</p>
-                    </div>
+                    <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
+                        min="1" max="30"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                    <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated? (1-30 days)</p>
                 </div>
 
                 <!-- Post Time -->
-                <div>
-                    <label for="id_post_time" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_post_time" class="block text-sm font-medium text-gray-700 mb-1">
                         Post Time
                     </label>
-                    <div class="mt-1">
-                        <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                        <p class="mt-2 text-sm text-gray-500">What time should posts be generated? (24-hour format)</p>
-                    </div>
+                    <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                    <p class="mt-2 text-sm text-gray-500">What time should posts be generated? (24-hour format)</p>
                 </div>
 
                 <!-- Submit Button -->
-                <div class="pt-5">
+                <div>
                     <button type="submit"
-                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                         Save Changes
                     </button>
                 </div>
@@ -95,98 +85,82 @@
                 {% csrf_token %}
                 
                 <!-- Company Name -->
-                <div>
-                    <label for="id_company_name" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_company_name" class="block text-sm font-medium text-gray-700 mb-1">
                         Company Name
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="Your company's legal name">
-                    </div>
+                    <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Your company's legal name">
                 </div>
 
                 <!-- VAT Number -->
-                <div>
-                    <label for="id_vat_number" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_vat_number" class="block text-sm font-medium text-gray-700 mb-1">
                         VAT Number
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="e.g., BE0123456789">
-                    </div>
+                    <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="e.g., BE0123456789">
                 </div>
 
                 <!-- Billing Address -->
-                <div>
-                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-700 mb-1">
                         Address Line 1
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="billing_address_line1" id="id_billing_address_line1" value="{{ object.billing_address_line1 }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="Street address">
-                    </div>
+                    <input type="text" name="billing_address_line1" id="id_billing_address_line1" value="{{ object.billing_address_line1 }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Street address">
                 </div>
 
-                <div>
-                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-700 mb-1">
                         Address Line 2
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="billing_address_line2" id="id_billing_address_line2" value="{{ object.billing_address_line2 }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
-                            placeholder="Apartment, suite, etc. (optional)">
-                    </div>
+                    <input type="text" name="billing_address_line2" id="id_billing_address_line2" value="{{ object.billing_address_line2 }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        placeholder="Apartment, suite, etc. (optional)">
                 </div>
 
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-2">
-                        <label for="id_billing_city" class="block text-sm font-medium text-gray-700">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
+                    <div>
+                        <label for="id_billing_city" class="block text-sm font-medium text-gray-700 mb-1">
                             City
                         </label>
-                        <div class="mt-1">
-                            <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
-                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                        </div>
+                        <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                     </div>
 
-                    <div class="sm:col-span-2">
-                        <label for="id_billing_state" class="block text-sm font-medium text-gray-700">
+                    <div>
+                        <label for="id_billing_state" class="block text-sm font-medium text-gray-700 mb-1">
                             State / Province
                         </label>
-                        <div class="mt-1">
-                            <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
-                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                        </div>
+                        <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                     </div>
 
-                    <div class="sm:col-span-2">
-                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-700">
+                    <div>
+                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-700 mb-1">
                             Postal Code
                         </label>
-                        <div class="mt-1">
-                            <input type="text" name="billing_postal_code" id="id_billing_postal_code" value="{{ object.billing_postal_code }}"
-                                class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                        </div>
+                        <input type="text" name="billing_postal_code" id="id_billing_postal_code" value="{{ object.billing_postal_code }}"
+                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                     </div>
                 </div>
 
-                <div>
-                    <label for="id_billing_country" class="block text-sm font-medium text-gray-700">
+                <div class="mb-4">
+                    <label for="id_billing_country" class="block text-sm font-medium text-gray-700 mb-1">
                         Country
                     </label>
-                    <div class="mt-1">
-                        <input type="text" name="billing_country" id="id_billing_country" value="{{ object.billing_country }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
+                    <input type="text" name="billing_country" id="id_billing_country" value="{{ object.billing_country }}"
+                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
                 </div>
 
                 <!-- Submit Button -->
                 <div>
                     <button type="submit"
-                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                        class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                         Update Billing Information
                     </button>
                 </div>
@@ -317,16 +291,16 @@
                                 </li>
                             </ul>
                             <button type="button" data-plan="basic"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-secondary">
+                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
                                 Select Plan
                             </button>
                         </div>
                     </div>
 
                     <!-- Professional Plan -->
-                    <div class="relative rounded-lg border-2 border-primary bg-white px-6 py-5 shadow-sm">
+                    <div class="relative rounded-lg border-2 border-teal-700 bg-white px-6 py-5 shadow-sm">
                         <div class="absolute -top-2 -right-2">
-                            <span class="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 text-xs font-medium text-white">
+                            <span class="inline-flex items-center rounded-full bg-teal-700 px-2.5 py-0.5 text-xs font-medium text-white">
                                 Popular
                             </span>
                         </div>
@@ -357,7 +331,7 @@
                                 </li>
                             </ul>
                             <button type="button" data-plan="pro"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-secondary">
+                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
                                 Select Plan
                             </button>
                         </div>
@@ -392,7 +366,7 @@
                                 </li>
                             </ul>
                             <button type="button" data-plan="enterprise"
-                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-secondary">
+                                class="select-plan mt-6 w-full rounded-md border border-transparent bg-teal-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-teal-800">
                                 Select Plan
                             </button>
                         </div>
@@ -421,7 +395,7 @@
         </div>
         <div class="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
             <button type="button" id="submit-payment"
-                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm">
+                class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-teal-700 text-base font-medium text-white hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 sm:ml-3 sm:w-auto sm:text-sm">
                 Subscribe
             </button>
             <button type="button" id="close-modal"
