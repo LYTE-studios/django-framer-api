@@ -6,9 +6,8 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <form method="post" class="space-y-6">
+    {% include "client/includes/section.html" with title="Blog Settings" description="Configure your blog's content generation settings and preferences." first=True %}
+        <form method="post" class="space-y-6">
                 {% csrf_token %}
                 
                 <!-- Business Name -->
@@ -91,15 +90,8 @@
     </div>
 </div>
 
-<!-- Billing Information -->
-<div class="mt-8">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Billing Information</h3>
-            <div class="mt-2 max-w-xl text-sm text-gray-500">
-                <p>This information will be used for your invoices.</p>
-            </div>
-            <form method="post" class="mt-5 space-y-6">
+{% include "client/includes/section.html" with title="Billing Information" description="This information will be used for your invoices." %}
+    <form method="post" class="space-y-6">
                 {% csrf_token %}
                 
                 <!-- Company Name -->
@@ -203,15 +195,8 @@
     </div>
 </div>
 
-<!-- Invoices -->
-<div class="mt-8">
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">Invoices</h3>
-            <div class="mt-2 max-w-xl text-sm text-gray-500">
-                <p>Download your past invoices.</p>
-            </div>
-            <div class="mt-4">
+{% include "client/includes/section.html" with title="Invoices" description="Download your past invoices." %}
+    <div>
                 {% if invoices %}
                 <div class="bg-white shadow overflow-hidden sm:rounded-md">
                     <ul role="list" class="divide-y divide-gray-200">
@@ -262,12 +247,8 @@
     </div>
 </div>
 
-<!-- Subscription Section -->
-<div class="mt-8">
-    <h2 class="text-lg font-medium text-gray-900">Subscription Management</h2>
-    <div class="mt-4 bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <!-- Current Subscription Status -->
+{% include "client/includes/section.html" with title="Subscription Management" description="Manage your subscription plan and billing details." %}
+    <!-- Current Subscription Status -->
             {% if subscription %}
             <div class="border-b border-gray-200 pb-5">
                 <h3 class="text-lg leading-6 font-medium text-gray-900">Current Plan</h3>
@@ -451,15 +432,8 @@
     </div>
 </div>
 
-<!-- Embed Code Section -->
-<div class="mt-8">
-    <h2 class="text-lg font-medium text-gray-900">Blog Embed Code</h2>
-    <div class="mt-4 bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            <div class="text-sm text-gray-500 mb-4">
-                Use this code to embed your blog posts on your website. Copy and paste it into your HTML where you want the posts to appear.
-            </div>
-            <div class="bg-gray-50 rounded-md p-4">
+{% include "client/includes/section.html" with title="Blog Embed Code" description="Use this code to embed your blog posts on your website. Copy and paste it into your HTML where you want the posts to appear." %}
+    <div class="bg-gray-50 rounded-md p-4">
                 <pre class="text-sm text-gray-700 whitespace-pre-wrap break-all">{{ embed_code }}</pre>
             </div>
             <div class="mt-4 flex justify-end">

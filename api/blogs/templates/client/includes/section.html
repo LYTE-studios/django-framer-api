@@ -1,0 +1,22 @@
+{% comment %}
+Usage:
+{% include "client/includes/section.html" with title="Section Title" description="Section description" %}
+    Content goes here
+{% endinclude %}
+{% endcomment %}
+
+<div class="{% if not first %}mt-8{% endif %}">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">{{ title }}</h3>
+            {% if description %}
+            <div class="mt-2 max-w-xl text-sm text-gray-500">
+                <p>{{ description }}</p>
+            </div>
+            {% endif %}
+            <div class="mt-5">
+                {{ content }}
+            </div>
+        </div>
+    </div>
+</div>
