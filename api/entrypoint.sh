@@ -28,6 +28,10 @@ wait_for_redis
 echo "Creating cache table..."
 python manage.py createcachetable
 
+# Collect static files
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
 # Execute the command passed to docker
 echo "Starting service..."
 echo "Running command: $@"
