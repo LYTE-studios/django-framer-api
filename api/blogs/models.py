@@ -69,13 +69,6 @@ class Client(models.Model):
     post_time = models.TimeField(default=timezone.datetime.strptime('09:00', '%H:%M').time(), help_text="Time of day to post (24-hour format)")
     last_post_generated = models.DateTimeField(null=True, blank=True)
     is_active = models.BooleanField(default=True)
-    completed_onboarding = models.BooleanField(default=False, db_index=True)
-
-    def save(self, *args, **kwargs):
-        # Ensure completed_onboarding is set to False if required fields are missing
-        if not all([self.name, self.gpt_prompt]):
-            self.completed_onboarding = False
-        super().save(*args, **kwargs)
     
     # Billing Information
     company_name = models.CharField(max_length=200, blank=True)

@@ -31,7 +31,6 @@ urlpatterns = [
     ), name='login'),
     path('accounts/logout/', auth_views.LogoutView.as_view(next_page='/'), name='logout'),
     path('accounts/register/', RegisterView.as_view(), name='register'),
-    path('onboarding/', OnboardingView.as_view(), name='onboarding'),
     
     # Password Reset URLs
     path('accounts/password_reset/',
