@@ -17,6 +17,7 @@ psycopg2-binary = "*"
 requests = "*"
 boto3 = "*"
 stripe = "*"
+whitenoise = "*"
 
 [dev-packages]
 
