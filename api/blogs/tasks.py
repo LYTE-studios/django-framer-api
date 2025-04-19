@@ -325,11 +325,32 @@ def generate_blog_posts_sync(client_id=None):
             relevant_event = get_relevant_event()
             avoid_subjects = get_avoid_subjects(client_obj)
             
-            # Prepare the system message with tone of voice examples
-            system_message = client_obj.gpt_prompt + "\n\n"
+            # Check if required fields are present
+            if not all([client_obj.industry, client_obj.business_description, client_obj.content_preferences]):
+                error_message = "Missing required fields: " + ", ".join([
+                    field for field, value in {
+                        'industry': client_obj.industry,
+                        'business description': client_obj.business_description,
+                        'content preferences': client_obj.content_preferences
+                    }.items() if not value
+                ])
+                raise ValueError(error_message)
+
+            # Prepare the system message
+            system_message = f"""Industry: {client_obj.industry}
+Business Description: {client_obj.business_description}
+Content Preferences: {client_obj.content_preferences}
+
+Generate blog posts that:
+1. Are relevant to our industry and business focus
+2. Provide value to our target audience
+3. Showcase our expertise and knowledge
+4. Use a professional and engaging tone
+
+"""
             if client_obj.tone_of_voice:
                 system_message += client_obj.tone_of_voice.get_formatted_examples()
-            system_message += "\nPlease generate a blog post that matches this tone of voice for a client named " + client_obj.name
+            system_message += "\nPlease generate a blog post for " + client_obj.name
 
             if relevant_event:
                 system_message += f"\nImportant: Consider incorporating or referencing this upcoming event if relevant: {relevant_event.name} ({relevant_event.date}). Event description: {relevant_event.description}"

@@ -14,4 +14,8 @@ class Migration(migrations.Migration):
             model_name='client',
             name='completed_onboarding',
         ),
+        migrations.RemoveField(
+            model_name='client',
+            name='gpt_prompt',
+        ),
     ]
