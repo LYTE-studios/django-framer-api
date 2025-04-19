@@ -5,60 +5,39 @@
 
 {% block content %}
 <div class="flex min-h-screen items-center justify-center bg-offwhite py-12 px-4 sm:px-6 lg:px-8">
-    <div class="w-full max-w-md space-y-8">
-        <div class="text-center">
-            <div class="flex justify-center">
-                <img src="{% static 'images/blovio-logo.svg' %}" alt="Blovio" class="h-12">
-            </div>
-            <h2 class="mt-6 text-center text-3xl font-bold tracking-tight text-primary font-poppins">Sign in to your account</h2>
+    <div class="w-full max-w-md">
+        <div class="flex justify-center mb-12">
+            <img src="{% static 'images/blovio-logo.svg' %}" alt="Blovio" class="h-8">
         </div>
-        <form class="mt-8 space-y-6" method="post">
+        <form method="post" class="space-y-4">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ next }}">
-            <div class="-space-y-px rounded-md shadow-sm">
-                <div>
-                    <label for="username" class="sr-only">Email address</label>
-                    <input id="username" name="username" type="email" required 
-                        class="relative block w-full rounded-t-md border-0 py-1.5 px-3 text-slate ring-1 ring-inset ring-slate/20 placeholder:text-slate/50 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-accent sm:text-sm sm:leading-6 font-inter" 
-                        placeholder="Email address">
-                </div>
-                <div class="relative">
-                    <label for="password" class="sr-only">Password</label>
-                    <input id="password" name="password" type="password" required 
-                        class="relative block w-full rounded-b-md border-0 py-1.5 px-3 text-slate ring-1 ring-inset ring-slate/20 placeholder:text-slate/50 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-accent sm:text-sm sm:leading-6 pr-10 font-inter" 
-                        placeholder="Password">
-                    <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg id="eye-icon" class="h-5 w-5 text-slate/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        <svg id="eye-off-icon" class="h-5 w-5 text-slate/50 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                        </svg>
-                    </button>
-                </div>
+            
+            <div>
+                <label for="username" class="block text-sm font-medium text-slate mb-1">Email</label>
+                <input id="username" name="username" type="email" required 
+                    class="block w-full rounded-md border-0 py-2.5 px-3 text-slate ring-1 ring-inset ring-slate/20 placeholder:text-slate/50 focus:ring-2 focus:ring-inset focus:ring-accent sm:text-sm sm:leading-6 font-inter" 
+                    placeholder="Email address">
             </div>
 
-            <script>
-                function togglePasswordVisibility() {
-                    const passwordInput = document.getElementById('password');
-                    const eyeIcon = document.getElementById('eye-icon');
-                    const eyeOffIcon = document.getElementById('eye-off-icon');
-                    
-                    if (passwordInput.type === 'password') {
-                        passwordInput.type = 'text';
-                        eyeIcon.classList.add('hidden');
-                        eyeOffIcon.classList.remove('hidden');
-                    } else {
-                        passwordInput.type = 'password';
-                        eyeIcon.classList.remove('hidden');
-                        eyeOffIcon.classList.add('hidden');
-                    }
-                }
-            </script>
+            <div class="relative">
+                <label for="password" class="block text-sm font-medium text-slate mb-1">Password</label>
+                <input id="password" name="password" type="password" required 
+                    class="block w-full rounded-md border-0 py-2.5 px-3 text-slate ring-1 ring-inset ring-slate/20 placeholder:text-slate/50 focus:ring-2 focus:ring-inset focus:ring-accent sm:text-sm sm:leading-6 pr-10 font-inter" 
+                    placeholder="Password">
+                <button type="button" onclick="togglePasswordVisibility()" class="absolute bottom-2.5 right-0 flex items-center pr-3">
+                    <svg id="eye-icon" class="h-5 w-5 text-slate/50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    <svg id="eye-off-icon" class="h-5 w-5 text-slate/50 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                    </svg>
+                </button>
+            </div>
 
             {% if form.errors %}
-            <div class="rounded-md bg-red-50 p-4 mt-4">
+            <div class="rounded-md bg-red-50 p-4">
                 <div class="flex">
                     <div class="text-sm text-red-700 font-inter">
                         Your username and password didn't match. Please try again.
@@ -67,22 +46,37 @@
             </div>
             {% endif %}
 
-            <div>
+            <div class="pt-2">
                 <button type="submit" 
-                    class="group relative flex w-full justify-center rounded-md bg-primary py-2 px-3 text-sm font-semibold text-white hover:bg-primary/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-colors font-inter">
+                    class="group relative flex w-full justify-center rounded-md bg-accent py-2.5 px-3 text-sm font-semibold text-white hover:bg-accent/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent transition-colors font-inter">
                     Sign in
                 </button>
             </div>
+
+            <div class="text-center">
+                <a href="{% url 'client:password_reset' %}" class="text-sm text-slate hover:text-primary transition-colors font-inter">
+                    Forgot password?
+                </a>
+            </div>
         </form>
-        <div class="mt-6 text-center text-sm font-inter">
-            <p class="text-slate/70">
-                Don't have an account?
-                <a href="{% url 'client:register' %}" class="font-medium text-accent hover:text-primary transition-colors">Sign up</a>
-            </p>
-            <p class="mt-2 text-slate/70">
-                <a href="{% url 'client:password_reset' %}" class="font-medium text-accent hover:text-primary transition-colors">Forgot your password?</a>
-            </p>
-        </div>
     </div>
 </div>
+
+<script>
+    function togglePasswordVisibility() {
+        const passwordInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('eye-icon');
+        const eyeOffIcon = document.getElementById('eye-off-icon');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            eyeIcon.classList.add('hidden');
+            eyeOffIcon.classList.remove('hidden');
+        } else {
+            passwordInput.type = 'password';
+            eyeIcon.classList.remove('hidden');
+            eyeOffIcon.classList.add('hidden');
+        }
+    }
+</script>
 {% endblock %}
