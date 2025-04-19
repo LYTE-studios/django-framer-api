@@ -76,8 +76,6 @@ class OnboardingView(LoginRequiredMixin, UpdateView):
 
     def form_valid(self, form):
         try:
-            client = form.save(commit=False)
-            
             # Get additional fields
             description = self.request.POST.get('description')
             industry = self.request.POST.get('industry')
@@ -86,7 +84,10 @@ class OnboardingView(LoginRequiredMixin, UpdateView):
                 messages.error(self.request, "All fields are required.")
                 return self.form_invalid(form)
             
-            # Set GPT prompt
+            # Get client instance but don't save yet
+            client = form.save(commit=False)
+            
+            # Set all required fields before saving
             client.gpt_prompt = f"""Industry: {industry}
 Business Description: {description}
 
@@ -97,6 +98,8 @@ Generate blog posts that:
 4. Use a professional and engaging tone
 """
             client.completed_onboarding = True
+            
+            # Now save with all fields set
             client.save()
             
             # Log the user in again to refresh the session
