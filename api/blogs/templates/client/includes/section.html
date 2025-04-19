@@ -5,15 +5,13 @@ Usage:
 {% endinclude %}
 {% endcomment %}
 
-<div class="{% if not first %}mt-8{% endif %}">
-    <h3 class="text-lg font-medium text-gray-900 mb-4">{{ title }}</h3>
-    <div class="bg-white shadow sm:rounded-lg">
-        <div class="px-4 py-5 sm:p-6">
-            {% if description %}
-            <div class="text-sm text-gray-500 mb-4">
-                <p>{{ description }}</p>
-            </div>
-            {% endif %}
+<div class="{% if not first %}mt-12{% endif %}">
+    <h3 class="text-xl font-semibold text-gray-900 mb-2">{{ title }}</h3>
+    {% if description %}
+    <p class="text-sm text-gray-500 mb-4">{{ description }}</p>
+    {% endif %}
+    <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-6 py-5">
             {{ content }}
         </div>
     </div>

@@ -7,26 +7,26 @@
 {% block content %}
 <div class="max-w-3xl mx-auto">
     {% include "client/includes/section.html" with title="Blog Settings" description="Configure your blog's content generation settings and preferences." first=True %}
-        <form method="post" class="space-y-6">
+        <form method="post">
                 {% csrf_token %}
                 
                 <!-- Business Name -->
-                <div class="mb-4">
-                    <label for="id_name" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_name" class="block text-sm font-medium text-gray-900 mb-1">
                         Business Name
                     </label>
                     <input type="text" name="name" id="id_name" value="{{ object.name }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="Your business name">
                 </div>
 
                 <!-- Tone of Voice -->
-                <div class="mb-4">
-                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_tone_of_voice" class="block text-sm font-medium text-gray-900 mb-1">
                         Tone of Voice
                     </label>
                     <select id="id_tone_of_voice" name="tone_of_voice"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                         <option value="">Select a tone of voice</option>
                         {% for tone in form.fields.tone_of_voice.queryset %}
                         <option value="{{ tone.id }}" {% if tone.id == object.tone_of_voice_id %}selected{% endif %}>
@@ -37,34 +37,34 @@
                 </div>
 
                 <!-- Content Guidelines -->
-                <div class="mb-4">
-                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_gpt_prompt" class="block text-sm font-medium text-gray-900 mb-1">
                         Content Guidelines
                     </label>
                     <textarea id="id_gpt_prompt" name="gpt_prompt" rows="4"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="Describe your content preferences, industry focus, and any specific requirements">{{ object.gpt_prompt }}</textarea>
                     <p class="mt-2 text-sm text-gray-500">This helps us generate content that matches your brand's voice and goals.</p>
                 </div>
 
                 <!-- Post Frequency -->
-                <div class="mb-4">
-                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_post_interval_days" class="block text-sm font-medium text-gray-900 mb-1">
                         Post Frequency (days)
                     </label>
                     <input type="number" name="post_interval_days" id="id_post_interval_days" value="{{ object.post_interval_days }}"
                         min="1" max="30"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                     <p class="mt-2 text-sm text-gray-500">How often should new blog posts be generated? (1-30 days)</p>
                 </div>
 
                 <!-- Post Time -->
-                <div class="mb-4">
-                    <label for="id_post_time" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_post_time" class="block text-sm font-medium text-gray-900 mb-1">
                         Post Time
                     </label>
                     <input type="time" name="post_time" id="id_post_time" value="{{ object.post_time|time:'H:i' }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                     <p class="mt-2 text-sm text-gray-500">What time should posts be generated? (24-hour format)</p>
                 </div>
 
@@ -81,80 +81,80 @@
 </div>
 
 {% include "client/includes/section.html" with title="Billing Information" description="This information will be used for your invoices." %}
-    <form method="post" class="space-y-6">
+    <form method="post">
                 {% csrf_token %}
                 
                 <!-- Company Name -->
-                <div class="mb-4">
-                    <label for="id_company_name" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_company_name" class="block text-sm font-medium text-gray-900 mb-1">
                         Company Name
                     </label>
                     <input type="text" name="company_name" id="id_company_name" value="{{ object.company_name }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="Your company's legal name">
                 </div>
 
                 <!-- VAT Number -->
-                <div class="mb-4">
-                    <label for="id_vat_number" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_vat_number" class="block text-sm font-medium text-gray-900 mb-1">
                         VAT Number
                     </label>
                     <input type="text" name="vat_number" id="id_vat_number" value="{{ object.vat_number }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="e.g., BE0123456789">
                 </div>
 
                 <!-- Billing Address -->
-                <div class="mb-4">
-                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_billing_address_line1" class="block text-sm font-medium text-gray-900 mb-1">
                         Address Line 1
                     </label>
                     <input type="text" name="billing_address_line1" id="id_billing_address_line1" value="{{ object.billing_address_line1 }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="Street address">
                 </div>
 
-                <div class="mb-4">
-                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_billing_address_line2" class="block text-sm font-medium text-gray-900 mb-1">
                         Address Line 2
                     </label>
                     <input type="text" name="billing_address_line2" id="id_billing_address_line2" value="{{ object.billing_address_line2 }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"
                         placeholder="Apartment, suite, etc. (optional)">
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3 mb-4">
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-6">
                     <div>
-                        <label for="id_billing_city" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="id_billing_city" class="block text-sm font-medium text-gray-900 mb-1">
                             City
                         </label>
                         <input type="text" name="billing_city" id="id_billing_city" value="{{ object.billing_city }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                     </div>
 
                     <div>
-                        <label for="id_billing_state" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="id_billing_state" class="block text-sm font-medium text-gray-900 mb-1">
                             State / Province
                         </label>
                         <input type="text" name="billing_state" id="id_billing_state" value="{{ object.billing_state }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                     </div>
 
                     <div>
-                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-700 mb-1">
+                        <label for="id_billing_postal_code" class="block text-sm font-medium text-gray-900 mb-1">
                             Postal Code
                         </label>
                         <input type="text" name="billing_postal_code" id="id_billing_postal_code" value="{{ object.billing_postal_code }}"
-                            class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                     </div>
                 </div>
 
-                <div class="mb-4">
-                    <label for="id_billing_country" class="block text-sm font-medium text-gray-700 mb-1">
+                <div class="mb-6">
+                    <label for="id_billing_country" class="block text-sm font-medium text-gray-900 mb-1">
                         Country
                     </label>
                     <input type="text" name="billing_country" id="id_billing_country" value="{{ object.billing_country }}"
-                        class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
                 </div>
 
                 <!-- Submit Button -->
@@ -172,33 +172,21 @@
 {% include "client/includes/section.html" with title="Invoices" description="Download your past invoices." %}
     <div>
                 {% if invoices %}
-                <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                    <ul role="list" class="divide-y divide-gray-200">
+                <div class="bg-white shadow-sm rounded-lg overflow-hidden">
+                    <ul role="list" class="divide-y divide-gray-100">
                         {% for invoice in invoices %}
                         <li>
                             <a href="{{ invoice.url }}" class="block hover:bg-gray-50">
-                                <div class="px-4 py-4 sm:px-6">
+                                <div class="px-6 py-4">
                                     <div class="flex items-center justify-between">
-                                        <div class="text-sm font-medium text-primary truncate">
+                                        <div class="text-sm font-medium text-gray-900">
                                             Invoice #{{ invoice.number }}
                                         </div>
-                                        <div class="ml-2 flex-shrink-0 flex">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        <div class="flex items-center gap-4">
+                                            <span class="text-sm text-gray-500">{{ invoice.date|date:"F j, Y" }}</span>
+                                            <span class="px-2.5 py-0.5 text-sm font-medium text-teal-700 bg-teal-50 rounded-full">
                                                 {{ invoice.amount }}
                                             </span>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2 sm:flex sm:justify-between">
-                                        <div class="sm:flex">
-                                            <p class="flex items-center text-sm text-gray-500">
-                                                {{ invoice.date|date:"F j, Y" }}
-                                            </p>
-                                        </div>
-                                        <div class="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
-                                            <svg class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-                                            </svg>
-                                            Download PDF
                                         </div>
                                     </div>
                                 </div>
@@ -224,52 +212,44 @@
 {% include "client/includes/section.html" with title="Subscription Management" description="Manage your subscription plan and billing details." %}
     <!-- Current Subscription Status -->
             {% if subscription %}
-            <div class="border-b border-gray-200 pb-5">
-                <h3 class="text-lg leading-6 font-medium text-gray-900">Current Plan</h3>
-                <dl class="mt-4 divide-y divide-gray-200">
-                    <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Status</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                {% if subscription.status == 'active' %}bg-green-100 text-green-800
-                                {% elif subscription.status == 'trialing' %}bg-blue-100 text-blue-800
-                                {% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ subscription.get_status_display }}
-                            </span>
-                        </dd>
+            <div class="bg-white shadow-sm rounded-lg p-6 mb-8">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Current Plan</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-500">Status</span>
+                        <span class="px-2.5 py-0.5 text-sm font-medium rounded-full
+                            {% if subscription.status == 'active' %}bg-teal-50 text-teal-700
+                            {% elif subscription.status == 'trialing' %}bg-blue-50 text-blue-700
+                            {% else %}bg-red-50 text-red-700{% endif %}">
+                            {{ subscription.get_status_display }}
+                        </span>
                     </div>
-                    <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Plan</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            {{ subscription.get_plan_display }}
-                        </dd>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-500">Plan</span>
+                        <span class="text-sm text-gray-900">{{ subscription.get_plan_display }}</span>
                     </div>
                     {% if subscription.trial_end %}
-                    <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Trial Ends</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            {{ subscription.trial_end|date:"F j, Y" }}
-                        </dd>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-500">Trial Ends</span>
+                        <span class="text-sm text-gray-900">{{ subscription.trial_end|date:"F j, Y" }}</span>
                     </div>
                     {% endif %}
                     {% if subscription.current_period_end %}
-                    <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                        <dt class="text-sm font-medium text-gray-500">Next Billing Date</dt>
-                        <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                            {{ subscription.current_period_end|date:"F j, Y" }}
-                        </dd>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-500">Next Billing Date</span>
+                        <span class="text-sm text-gray-900">{{ subscription.current_period_end|date:"F j, Y" }}</span>
                     </div>
                     {% endif %}
-                </dl>
+                </div>
             </div>
             {% endif %}
 
             <!-- Available Plans -->
-            <div class="mt-6">
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Available Plans</h3>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-6">Available Plans</h3>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
                     <!-- Basic Plan -->
-                    <div class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400">
+                    <div class="relative rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm hover:border-gray-300">
                         <div class="space-y-4">
                             <h4 class="text-lg font-semibold text-gray-900">Basic</h4>
                             <div class="flex items-baseline">
@@ -338,7 +318,7 @@
                     </div>
 
                     <!-- Enterprise Plan -->
-                    <div class="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400">
+                    <div class="relative rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm hover:border-gray-300">
                         <div class="space-y-4">
                             <h4 class="text-lg font-semibold text-gray-900">Enterprise</h4>
                             <div class="flex items-baseline">
@@ -412,7 +392,7 @@
             </div>
             <div class="mt-4 flex justify-end">
                 <button type="button" id="copyButton"
-                    class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
+                    class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-teal-700 hover:bg-teal-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500">
                     Copy to Clipboard
                 </button>
             </div>
