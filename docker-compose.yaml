@@ -14,7 +14,7 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
-    command: sh -c "python manage.py migrate && gunicorn --workers 3 --bind 0.0.0.0:8000 api.wsgi:application"
+    command: sh -c "gunicorn --workers 3 --bind 0.0.0.0:8000 api.wsgi:application"
     volumes:
       - ./api:/app
       - static_volume:/app/staticfiles
